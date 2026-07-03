@@ -1,69 +1,47 @@
 # Calculadora AC4 - 19º Comando Regional PMGO
 
-Ferramenta web para auxiliar o policial militar no cálculo de horas e do valor estimado a receber em escalas AC4, com identidade visual do **19º Comando Regional da Polícia Militar de Goiás**, geração de relatório em PDF e previsão de importação da Agenda Google.
+Calculadora simples para auxiliar o policial militar a estimar o valor a receber em escala AC4.
 
 > Base normativa declarada: Portaria SSP nº 621/2026 — vigência a partir de 01/07/2026.
 
 ## Objetivo
 
-Facilitar ao policial:
+Ser uma calculadora rápida, com poucos campos:
 
-- calcular horas de escala;
-- diferenciar horas diurnas e noturnas;
-- estimar quanto irá receber conforme a tabela oficial vigente;
-- lançar escalas manualmente;
-- importar eventos do Google Agenda conforme parâmetros definidos;
-- gerar relatório em PDF para salvar, imprimir ou anexar em conferência administrativa.
+1. data e hora de início do serviço;
+2. quantidade de horas trabalhadas;
+3. botão para calcular;
+4. resultado estimado;
+5. opção de salvar em PDF.
+
+## Como acessar
+
+GitHub Pages:
+
+```txt
+https://welitonsp.github.io/pmgo-calculadora-ac4/
+```
+
+## Como usar
+
+1. Informe a data e hora de início.
+2. Informe a quantidade de horas trabalhadas.
+3. Clique em **Calcular valor**.
+4. Confira o valor estimado.
+5. Clique em **Salvar em PDF**, se precisar guardar o comprovante do cálculo.
 
 ## Identidade visual
 
-O projeto deve utilizar o brasão do **19º CRPM/PMGO** no cabeçalho da aplicação e no relatório gerado em PDF.
+O projeto está preparado para exibir o brasão do **19º CRPM/PMGO** no cabeçalho.
 
-Caminho recomendado para o arquivo:
+Caminho esperado do arquivo:
 
 ```txt
 assets/brasao-19crpm.png
 ```
 
-## Como usar — MVP previsto
-
-1. Acessar a versão online pelo GitHub Pages.
-2. Preencher dados do policial.
-3. Configurar a tabela oficial de valores AC4 vigente.
-4. Lançar escalas manualmente ou importar agenda.
-5. Conferir horas e valor estimado.
-6. Clicar em **Gerar PDF / imprimir** e selecionar **Salvar como PDF** no navegador.
-
-## Importação da Agenda Google
-
-A primeira versão deve usar importação por arquivo `.ics`, exportado pelo próprio policial no Google Agenda.
-
-Parâmetros mínimos:
-
-- período inicial e final;
-- palavras-chave como `AC4`, `extra`, `escala` ou `serviço extraordinário`;
-- pré-visualização dos eventos importados;
-- confirmação antes de adicionar ao cálculo.
-
-A integração direta com Google Agenda por OAuth fica prevista para fase futura, pois exige credenciais Google, consentimento, política de privacidade e tratamento seguro de tokens.
-
-## PDF
-
-O relatório em PDF deve conter:
-
-- brasão do 19º CRPM;
-- dados do policial;
-- mês de referência;
-- lista de escalas;
-- horas diurnas e noturnas;
-- valor estimado por escala;
-- valor total estimado;
-- aviso de conferência administrativa.
-
-## Documentação
-
-- [`docs/ESCOPO_MVP.md`](docs/ESCOPO_MVP.md) — escopo funcional do MVP com brasão, cálculo, PDF e importação da agenda.
+Caso o arquivo não exista, a página exibe um marcador simples com `19º CRPM PMGO`.
 
 ## Observação
 
-Esta ferramenta é de apoio e simulação. O pagamento final depende da conferência administrativa, da escala validada e da tabela oficial vigente.
+Esta ferramenta é apenas apoio de cálculo. O pagamento final depende da escala validada, da tabela oficial vigente e da conferência administrativa.
