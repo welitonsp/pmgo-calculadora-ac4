@@ -6,29 +6,37 @@ Calculadora simples para auxiliar o policial militar a estimar o valor a receber
 
 ## Objetivo
 
-Ser uma calculadora rápida, com poucos campos:
+A ferramenta permite:
 
-1. data e hora de início do serviço;
-2. quantidade de horas trabalhadas;
-3. botão para calcular;
-4. resultado estimado;
-5. opção de salvar em PDF.
+1. cadastrar uma ou mais escalas;
+2. calcular horas diurnas e noturnas;
+3. estimar o valor a receber;
+4. gerar um arquivo .ics para importar para a agenda do Google Calendar;
+5. salvar o resumo em PDF.
 
 ## Como acessar
 
 GitHub Pages:
 
-```txt
-https://welitonsp.github.io/pmgo-calculadora-ac4/
-```
+[Acessar a Calculadora AC4](https://welitonsp.github.io/pmgo-calculadora-ac4/)
 
 ## Como usar
 
-1. Informe a data e hora de início.
-2. Informe a quantidade de horas trabalhadas.
-3. Clique em **Calcular valor**.
-4. Confira o valor estimado.
-5. Clique em **Salvar em PDF**, se precisar guardar o comprovante do cálculo.
+1. Preencha os dados do policial.
+2. Adicione uma ou mais escalas com início, término e descrição.
+3. Clique em **Calcular total**.
+4. Confira o resumo estimado.
+5. Clique em **Gerar arquivo .ics** para baixar o calendário e importar no Google Calendar.
+6. Clique em **Salvar em PDF**, se precisar guardar o comprovante do cálculo.
+
+## Importação para o Google Calendar
+
+O botão **Gerar arquivo .ics** baixa um arquivo compatível com o Google Calendar. Para importar no celular ou no computador:
+
+1. baixe o arquivo .ics;
+2. abra o Google Calendar;
+3. use a opção para importar calendário a partir do arquivo;
+4. confirme a importação dos eventos.
 
 ## Identidade visual
 
