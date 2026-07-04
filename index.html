@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Calculadora AC4 · PMGO</title>
-  <meta name="description" content="Calculadora de escalas AC4 da Polícia Militar de Goiás — horas diurnas e noturnas, valor estimado, importação de agenda e relatório em PDF.">
+  <meta name="description" content="Calculadora de escalas AC4 da Polícia Militar de Goiás — horas diurnas e noturnas, valor estimado, exportação para agenda e relatório em PDF.">
   <meta name="theme-color" content="#0b1f3a">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
@@ -52,7 +52,7 @@
           <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
           </svg>
-          <input type="search" id="buscaEscala" placeholder="Buscar escala, tipo ou descrição" aria-label="Buscar escala">
+          <input type="search" id="buscaEscala" placeholder="Buscar por tipo ou data" aria-label="Buscar escala">
         </div>
       </div>
       <div class="topbar-actions">
@@ -173,36 +173,11 @@
                 <input type="datetime-local" class="control" id="escalaFim" required>
                 <p class="field-error">O término deve ser depois do início.</p>
               </div>
-              <div class="field" id="fieldDescricao">
-                <label for="escalaDescricao">Descrição</label>
-                <textarea class="control" id="escalaDescricao" placeholder="Ex.: AC4 — Policiamento Setor Central" maxlength="200"></textarea>
-                <p class="field-error">Descreva a escala.</p>
-              </div>
               <button type="submit" class="btn btn-primary" id="btnSubmit">Adicionar escala</button>
             </div>
 
             <button type="button" class="btn btn-ghost btn-block hidden" id="btnCancelEdit" style="margin-top:8px">Cancelar edição</button>
           </form>
-
-          <div class="divider">ou</div>
-
-          <div class="field-row">
-            <div class="field">
-              <label for="importInicio">Importar de</label>
-              <input type="date" class="control" id="importInicio">
-            </div>
-            <div class="field">
-              <label for="importFim">até</label>
-              <input type="date" class="control" id="importFim">
-            </div>
-          </div>
-          <input type="file" id="icsFile" accept=".ics,text/calendar" class="hidden">
-          <button type="button" class="btn btn-outline btn-block" id="btnImportIcs">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
-            Importar agenda (.ics)
-          </button>
         </div>
       </section>
 
@@ -283,29 +258,6 @@
       Nova escala
     </button>
   </div>
-
-  <!-- Modal: preview da importação ICS -->
-  <dialog class="modal" id="modalImport" aria-labelledby="modalImportTitle">
-    <div class="modal-header">
-      <h2 id="modalImportTitle">Confirmar importação</h2>
-      <button class="btn-icon" id="btnCancelImport" aria-label="Fechar" style="border:none">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6 6 18M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">
-        Selecione os eventos que deseja adicionar como escalas. Eventos com palavras-chave
-        (AC4, extra, serviço, plantão, escala) já vêm marcados.
-      </p>
-      <div id="importLista"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm spread" id="btnSelectAll">Marcar/desmarcar todos</button>
-      <button class="btn btn-primary" id="btnConfirmImport">Importar</button>
-    </div>
-  </dialog>
 
   <!-- Toasts -->
   <div class="toast-region" id="toastRegion" aria-live="polite"></div>

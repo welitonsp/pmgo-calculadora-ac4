@@ -19,7 +19,6 @@
   let filtroMes = 'todos';   // 'todos' | 'YYYY-MM'
   let termoBusca = '';
   let ultimaExcluida = null; // para desfazer
-  let importCandidatos = []; // eventos do ICS aguardando confirmação
   const PORTARIA_ATUAL = 'Portaria SSP nº 621/2026';
   const VALORES_OFICIAIS = { valAD: '30', valAN: '33', valVD: '40', valVN: '45' };
 
@@ -216,7 +215,6 @@
   function validarFormulario() {
     const inicio = $('escalaInicio').value;
     const fim = $('escalaFim').value;
-    const descricao = $('escalaDescricao').value.trim();
     let ok = true;
 
     const marca = (fieldId, invalido) => {
@@ -225,14 +223,13 @@
     };
     marca('fieldInicio', !inicio);
     marca('fieldFim', !fim || (inicio && new Date(fim) <= new Date(inicio)));
-    marca('fieldDescricao', !descricao);
 
     const duracaoHoras = inicio && fim ? (new Date(fim) - new Date(inicio)) / 3600000 : 0;
     if (ok && duracaoHoras > 24 &&
         !confirm(`A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`)) {
       ok = false;
     }
-    return ok ? { inicio, fim, descricao } : null;
+    return ok ? { inicio, fim } : null;
   }
 
   function submeterFormulario() {
@@ -247,8 +244,7 @@
       cancelarEdicao();
       toast('Escala atualizada.');
     } else {
-      escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
-      $('escalaDescricao').value = '';
+      escalas.push({ id: Date.now() + Math.random(), descricao: 'Escala AC4', ...dados, tabela: tabelaAtual });
       toast('Escala adicionada.');
     }
     salvar();
@@ -261,12 +257,11 @@
     editandoId = id;
     $('escalaInicio').value = e.inicio;
     $('escalaFim').value = e.fim;
-    $('escalaDescricao').value = e.descricao;
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
     $('formTitle').lastChild.textContent = 'Editar escala';
     document.querySelector('.launch-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    $('escalaDescricao').focus();
+    $('escalaInicio').focus();
   }
 
   function cancelarEdicao() {
@@ -274,8 +269,7 @@
     $('btnSubmit').textContent = 'Adicionar escala';
     $('btnCancelEdit').classList.add('hidden');
     $('formTitle').lastChild.textContent = 'Lançar escala';
-    $('escalaDescricao').value = '';
-    ['fieldInicio', 'fieldFim', 'fieldDescricao'].forEach((f) => $(f).classList.remove('invalid'));
+    ['fieldInicio', 'fieldFim'].forEach((f) => $(f).classList.remove('invalid'));
   }
 
   function duplicarEscala(id) {
@@ -367,7 +361,7 @@
           <p>${termoBusca
             ? 'Ajuste a busca no cabeçalho para localizar outras escalas.'
             : filtroMes === 'todos'
-              ? 'Preencha o formulário ao lado ou importe um arquivo .ics para iniciar o cálculo.'
+              ? 'Preencha o formulário acima para iniciar o cálculo.'
               : 'Escolha outro mês no filtro acima.'}</p>
         </div>`;
       $('printDate').textContent = new Date().toLocaleString('pt-BR');
@@ -449,122 +443,11 @@
     filtroMes = sel.value;
   }
 
-  /* ------------------------------------------------------------- ICS */
-  function parseICS(texto) {
-    const linhas = texto.split(/\r?\n/).reduce((acc, l) => {
-      if (/^[ \t]/.test(l) && acc.length) acc[acc.length - 1] += l.slice(1);
-      else acc.push(l);
-      return acc;
-    }, []);
-
-    const parseData = (linha) => {
-      const valor = linha.slice(linha.indexOf(':') + 1).trim();
-      const m = valor.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/);
-      if (!m) return null;
-      const [, Y, Mo, D, h = '0', mi = '0', s = '0', z] = m;
-      const d = z
-        ? new Date(Date.UTC(+Y, +Mo - 1, +D, +h, +mi, +s))
-        : new Date(+Y, +Mo - 1, +D, +h, +mi, +s);
-      return isNaN(d) ? null : toInputLocal(d);
-    };
-
-    const unescapeICS = (s) =>
-      s.replace(/\\n/gi, ' ').replace(/\\([,;\\])/g, '$1').trim();
-
-    const eventos = [];
-    let atual = null;
-    for (const l of linhas) {
-      if (l.startsWith('BEGIN:VEVENT')) { atual = {}; continue; }
-      if (l.startsWith('END:VEVENT')) {
-        if (atual && atual.inicio && atual.fim && atual.descricao &&
-            new Date(atual.fim) > new Date(atual.inicio)) {
-          eventos.push(atual);
-        }
-        atual = null;
-        continue;
-      }
-      if (!atual) continue;
-      if (l.startsWith('DTSTART')) atual.inicio = parseData(l);
-      else if (l.startsWith('DTEND')) atual.fim = parseData(l);
-      else if (l.startsWith('SUMMARY')) atual.descricao = unescapeICS(l.slice(l.indexOf(':') + 1));
-    }
-    return eventos;
-  }
-
-  function filtrarEventosImportacao(eventos) {
-    const inicio = $('importInicio').value ? new Date(`${$('importInicio').value}T00:00:00`) : null;
-    const fim = $('importFim').value ? new Date(`${$('importFim').value}T00:00:00`) : null;
-    if (fim) fim.setDate(fim.getDate() + 1);
-    return eventos.filter((ev) => {
-      const evInicio = new Date(ev.inicio);
-      const evFim = new Date(ev.fim);
-      return (!inicio || evFim > inicio) && (!fim || evInicio < fim);
-    });
-  }
-
-  function importarICS(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const eventos = filtrarEventosImportacao(parseICS(String(reader.result)));
-      $('icsFile').value = '';
-      if (!eventos.length) {
-        toast('Nenhum evento válido encontrado no arquivo ou no intervalo informado.', { erro: true });
-        return;
-      }
-      const kw = ['AC4', 'EXTRA', 'SERVICO', 'SERVIÇO', 'PLANTAO', 'PLANTÃO', 'ESCALA'];
-      importCandidatos = eventos.map((ev) => ({
-        ...ev,
-        selecionado: kw.some((k) => ev.descricao.toUpperCase().includes(k)),
-      }));
-      renderModalImport();
-      $('modalImport').showModal();
-    };
-    reader.onerror = () => toast('Não foi possível ler o arquivo.', { erro: true });
-    reader.readAsText(file);
-  }
-
-  function renderModalImport() {
-    const body = $('importLista');
-    body.innerHTML = importCandidatos.map((ev, i) => `
-      <label class="import-item ${ev.selecionado ? 'selected' : ''}">
-        <input type="checkbox" data-idx="${i}" ${ev.selecionado ? 'checked' : ''}>
-        <div>
-          <div class="import-title">${escapeHTML(ev.descricao)}</div>
-          <div class="import-time">${fmtDataHora(ev.inicio)} → ${fmtDataHora(ev.fim)}</div>
-        </div>
-      </label>`).join('');
-    const n = importCandidatos.filter((e) => e.selecionado).length;
-    $('btnConfirmImport').textContent = n ? `Importar ${n} evento${n > 1 ? 's' : ''}` : 'Importar';
-    $('btnConfirmImport').disabled = n === 0;
-  }
-
-  function confirmarImport() {
-    const tabelaAtual = validarTabelaAtual();
-    if (!tabelaAtual) return;
-    const selecionados = importCandidatos.filter((e) => e.selecionado);
-    selecionados.forEach((ev) => {
-      escalas.push({
-        id: Date.now() + Math.random(),
-        inicio: ev.inicio,
-        fim: ev.fim,
-        descricao: ev.descricao,
-        tabela: tabelaAtual,
-      });
-    });
-    $('modalImport').close();
-    importCandidatos = [];
-    salvar();
-    render();
-    toast(`${selecionados.length} escala${selecionados.length > 1 ? 's importadas' : ' importada'}.`);
-  }
-
   /* ------------------------------------------------------- exportações */
   function exportarICS() {
     const lista = escalasFiltradas();
     if (!lista.length) {
-      toast('Adicione ou importe escalas antes de gerar o arquivo .ics.', { erro: true });
+      toast('Adicione escalas antes de gerar o arquivo .ics.', { erro: true });
       return;
     }
     const fmt = (iso) =>
@@ -590,7 +473,7 @@
   function exportarCSV() {
     const lista = escalasFiltradas();
     if (!lista.length) {
-      toast('Adicione ou importe escalas antes de exportar CSV.', { erro: true });
+      toast('Adicione escalas antes de exportar CSV.', { erro: true });
       return;
     }
     const sep = ';';
@@ -643,8 +526,6 @@
     $('btnTheme').addEventListener('click', () =>
       aplicarTema(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
     $('btnPrint').addEventListener('click', () => window.print());
-    $('btnImportIcs').addEventListener('click', () => $('icsFile').click());
-    $('icsFile').addEventListener('change', importarICS);
     $('btnExportIcs').addEventListener('click', exportarICS);
     $('btnExportCsv').addEventListener('click', exportarCSV);
     $('btnClearAll').addEventListener('click', limparTudo);
@@ -675,24 +556,6 @@
       if (btn.dataset.acao === 'remover') removerEscala(id);
       else if (btn.dataset.acao === 'editar') editarEscala(id);
       else if (btn.dataset.acao === 'duplicar') duplicarEscala(id);
-    });
-
-    // modal de importação
-    $('importLista').addEventListener('change', (ev) => {
-      const cb = ev.target.closest('input[data-idx]');
-      if (!cb) return;
-      importCandidatos[+cb.dataset.idx].selecionado = cb.checked;
-      renderModalImport();
-    });
-    $('btnConfirmImport').addEventListener('click', confirmarImport);
-    $('btnCancelImport').addEventListener('click', () => {
-      $('modalImport').close();
-      importCandidatos = [];
-    });
-    $('btnSelectAll').addEventListener('click', () => {
-      const todos = importCandidatos.every((e) => e.selecionado);
-      importCandidatos.forEach((e) => { e.selecionado = !todos; });
-      renderModalImport();
     });
 
     render();

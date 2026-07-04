@@ -16,7 +16,7 @@ No celular, use a opção **"Adicionar à tela inicial"** do navegador para inst
 
 ## Funcionalidades
 
-- **Lançamento de escalas** com início, término e descrição.
+- **Lançamento de escalas** com início e término.
 - **Cálculo minuto a minuto** de horas diurnas e noturnas:
   - noturno: 22h às 5h;
   - tarifa vermelha: sexta, sábado e domingo;
@@ -25,8 +25,6 @@ No celular, use a opção **"Adicionar à tela inicial"** do navegador para inst
 - **Dashboard reativo** com total de horas, quantidade de escalas e valor estimado.
 - **Filtro por mês** quando há escalas em meses diferentes.
 - **Edição, duplicação (para o dia seguinte) e exclusão com desfazer**.
-- **Importação de agenda (.ics)** com pré-visualização e confirmação evento a evento —
-  eventos com palavras-chave (AC4, extra, serviço, plantão, escala) já vêm pré-selecionados.
 - **Exportação**: arquivo `.ics` (Google Calendar) e planilha `.csv` (Excel/Sheets).
 - **Relatório em PDF** via botão "Salvar PDF" (impressão do navegador), com brasão,
   tabela de escalas e valor por escala.
