@@ -1,0 +1,25 @@
+{
+  "name": "Calculadora AC4 — PMGO",
+  "short_name": "AC4 PMGO",
+  "description": "Calculadora de escalas AC4 da Polícia Militar de Goiás — 19º CRPM.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#059669",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

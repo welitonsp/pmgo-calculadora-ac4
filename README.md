@@ -1,55 +1,57 @@
-# Calculadora AC4 - 19º Comando Regional PMGO
+# Calculadora AC4 — 19º CRPM / PMGO
 
-Calculadora simples para auxiliar o policial militar a estimar o valor a receber em escala AC4.
+Aplicação web para o policial militar estimar horas e valores de escalas AC4.
+Funciona no computador e no celular, pode ser **instalada como aplicativo (PWA)**
+e continua funcionando **offline** após o primeiro acesso.
 
 > Base normativa declarada: Portaria SSP nº 621/2026 — vigência a partir de 01/07/2026.
+> Os valores da tabela são configuráveis dentro da própria ferramenta.
 
-## Objetivo
+## Acesso
 
-A ferramenta permite:
+[Abrir a Calculadora AC4](https://welitonsp.github.io/pmgo-calculadora-ac4/)
 
-1. cadastrar uma ou mais escalas;
-2. calcular horas diurnas e noturnas;
-3. estimar o valor a receber;
-4. gerar um arquivo .ics para importar para a agenda do Google Calendar;
-5. salvar o resumo em PDF.
+No celular, use a opção **"Adicionar à tela inicial"** do navegador para instalar como app.
 
-## Como acessar
+## Funcionalidades
 
-GitHub Pages:
+- **Lançamento de escalas** com início, término, descrição e marcação de feriado
+  (feriado aplica tarifa vermelha o dia inteiro).
+- **Cálculo minuto a minuto** de horas diurnas e noturnas:
+  - noturno: 22h às 5h;
+  - tarifa vermelha: sexta, sábado, domingo e feriados;
+  - tarifa azul: demais dias.
+- **Dashboard reativo** com total de horas, quantidade de escalas e valor estimado.
+- **Filtro por mês** quando há escalas em meses diferentes.
+- **Edição, duplicação (para o dia seguinte) e exclusão com desfazer**.
+- **Importação de agenda (.ics)** com pré-visualização e confirmação evento a evento —
+  eventos com palavras-chave (AC4, extra, serviço, plantão, escala) já vêm pré-selecionados.
+- **Exportação**: arquivo `.ics` (Google Calendar) e planilha `.csv` (Excel/Sheets).
+- **Relatório em PDF** via botão "Salvar PDF" (impressão do navegador), com brasão,
+  agrupamento por dia e valor por escala.
+- **Tema claro/escuro** com detecção automática da preferência do sistema.
+- **Dados salvos no dispositivo** (localStorage) — nada é enviado a servidores.
 
-[Acessar a Calculadora AC4](https://welitonsp.github.io/pmgo-calculadora-ac4/)
+## Estrutura do projeto
 
-## Como usar
+```txt
+index.html            página única da aplicação
+css/styles.css        design system (temas, componentes, impressão)
+js/app.js             lógica: estado, cálculo, ICS, exportações, UI
+sw.js                 service worker (funcionamento offline)
+manifest.webmanifest  manifesto PWA
+assets/               ícones e brasão (assets/brasao-19crpm.png)
+docs/                 escopo e checklist do MVP
+```
 
-1. Preencha os dados do policial.
-2. Adicione uma ou mais escalas com início, término e descrição.
-3. Clique em **Calcular total**.
-4. Confira o resumo estimado.
-5. Clique em **Gerar arquivo .ics** para baixar o calendário e importar no Google Calendar.
-6. Clique em **Salvar em PDF**, se precisar guardar o comprovante do cálculo.
-
-## Importação para o Google Calendar
-
-O botão **Gerar arquivo .ics** baixa um arquivo compatível com o Google Calendar. Para importar no celular ou no computador:
-
-1. baixe o arquivo .ics;
-2. abra o Google Calendar;
-3. use a opção para importar calendário a partir do arquivo;
-4. confirme a importação dos eventos.
+Sem build, sem dependências: basta servir os arquivos estáticos (GitHub Pages).
 
 ## Identidade visual
 
-O projeto está preparado para exibir o brasão do **19º CRPM/PMGO** no cabeçalho.
+Coloque o brasão do 19º CRPM em `assets/brasao-19crpm.png`. Se o arquivo não
+existir, a interface exibe um escudo genérico no lugar.
 
-Caminho esperado do arquivo:
+## Aviso
 
-```txt
-assets/brasao-19crpm.png
-```
-
-Caso o arquivo não exista, a página exibe um marcador simples com `19º CRPM PMGO`.
-
-## Observação
-
-Esta ferramenta é apenas apoio de cálculo. O pagamento final depende da escala validada, da tabela oficial vigente e da conferência administrativa.
+Esta ferramenta é apenas apoio de cálculo. O pagamento final depende da escala
+validada, da tabela oficial vigente e da conferência administrativa da SSP.
