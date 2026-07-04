@@ -1,943 +1,695 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora AC4 - 19º CRPM</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora AC4 - PMGO</title>
   
-  <!-- Google Fonts & Material Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
   <style>
     :root {
-      /* Google Material 3 Inspired Palette mixed with PMGO colors */
-      --md-sys-color-primary: #006b3a; /* PMGO Green */
-      --md-sys-color-on-primary: #ffffff;
-      --md-sys-color-primary-container: #8ef7b5;
-      --md-sys-color-on-primary-container: #00210e;
+      /* Cores Premium inspiradas em dashboards de Big Tech (Vercel/Linear) */
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --primary: #059669; /* Verde PMGO modernizado */
+      --primary-hover: #047857;
+      --primary-light: #d1fae5;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --focus-ring: rgba(5, 150, 105, 0.2);
       
-      --md-sys-color-secondary: #00658f; /* Blue */
-      --md-sys-color-on-secondary: #ffffff;
-      --md-sys-color-secondary-container: #c7e7ff;
-      --md-sys-color-on-secondary-container: #001e2e;
-
-      --md-sys-color-tertiary: #755b00; /* Gold */
-      --md-sys-color-on-tertiary: #ffffff;
-      --md-sys-color-tertiary-container: #ffe084;
-      
-      --md-sys-color-error: #ba1a1a;
-      --md-sys-color-background: #fbfdf9;
-      --md-sys-color-surface: #fbfdf9;
-      --md-sys-color-surface-variant: #dce5dd;
-      --md-sys-color-on-surface: #191c1a;
-      --md-sys-color-on-surface-variant: #404943;
-      --md-sys-color-outline: #707973;
-      
-      --elevation-1: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15);
-      --elevation-2: 0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15);
-      --elevation-3: 0px 1px 3px 0px rgba(0,0,0,0.3), 0px 4px 8px 3px rgba(0,0,0,0.15);
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --radius-lg: 16px;
+      --radius-md: 12px;
     }
 
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--md-sys-color-background);
-      color: var(--md-sys-color-on-surface);
-      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, sans-serif;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      padding: 24px 16px;
+      padding-bottom: 60px;
     }
 
-    h1, h2, h3, .title {
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
+    /* Layout Principal */
+    .topbar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
       display: flex;
-      flex-direction: column;
-      gap: 24px;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
     }
 
-    /* Header */
-    .header {
-      text-align: center;
-      padding: 24px 0;
-      position: relative;
-    }
-    
-    .brasao-container {
-      width: 96px;
-      height: 96px;
-      margin: 0 auto 16px;
-      position: relative;
-    }
-
-    .brasao {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .brasao-fallback {
-      width: 100%;
-      height: 100%;
-      border-radius: 24px;
-      display: none;
-      place-items: center;
-      background: linear-gradient(135deg, var(--md-sys-color-primary-container), var(--md-sys-color-tertiary-container));
-      color: var(--md-sys-color-primary);
-      font-weight: 700;
-      font-size: 16px;
-      text-align: center;
-      line-height: 1.2;
-      box-shadow: var(--elevation-1);
-    }
-
-    .header h1 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--md-sys-color-primary);
-      letter-spacing: -0.5px;
-    }
-
-    .header p {
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 1rem;
-      margin-top: 4px;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--md-sys-color-surface);
-      border-radius: 24px;
-      padding: 28px;
-      box-shadow: var(--elevation-1);
-      border: 1px solid rgba(0,0,0,0.05);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .card:hover {
-      box-shadow: var(--elevation-2);
-    }
-
-    .card-title {
+    .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.25rem;
+    }
+
+    .brand img { width: 36px; height: 36px; object-fit: contain; }
+    
+    .brand h1 {
+      font-size: 1.1rem;
       font-weight: 600;
-      margin-bottom: 24px;
-      color: var(--md-sys-color-primary);
+      letter-spacing: -0.02em;
     }
+    .brand p { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
-    .card-title .material-symbols-outlined {
-      font-size: 28px;
-    }
-
-    /* Forms */
-    .grid {
+    .layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: 320px 1fr;
+      gap: 32px;
+      max-width: 1280px;
+      margin: 32px auto;
+      padding: 0 32px;
     }
 
-    .form-group {
+    /* Formulários e Inputs */
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .panel-header {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 20px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 8px;
     }
+    .panel-header .material-symbols-outlined { font-size: 18px; color: var(--text-muted); }
 
-    label {
-      font-size: 0.875rem;
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
       font-weight: 500;
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
 
-    input, textarea, select {
-      font-family: 'Roboto', sans-serif;
-      font-size: 1rem;
-      padding: 14px 16px;
-      border: 1px solid var(--md-sys-color-outline);
-      border-radius: 12px;
-      background: transparent;
-      color: var(--md-sys-color-on-surface);
-      transition: all 0.2s ease;
+    .input-control {
+      width: 100%;
+      background: var(--bg-body);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      transition: all 0.2s;
     }
 
-    input:focus, textarea:focus, select:focus {
+    .input-control:focus {
       outline: none;
-      border-color: var(--md-sys-color-primary);
-      border-width: 2px;
-      padding: 13px 15px; /* compensate for border width */
-      box-shadow: 0 4px 12px rgba(0, 107, 58, 0.1);
-    }
-    
-    input[type="file"] {
-      padding: 10px;
-      font-size: 0.875rem;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--focus-ring);
+      background: var(--bg-surface);
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
+    textarea.input-control { resize: vertical; min-height: 70px; }
 
-    /* Buttons */
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
+    /* Botões */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 24px;
-      font-size: 0.95rem;
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 0.9rem;
       font-weight: 500;
-      font-family: 'Outfit', sans-serif;
-      border-radius: 100px; /* Pill shape - Material 3 */
-      border: none;
+      border-radius: 8px;
+      border: 1px solid transparent;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+      transition: all 0.2s;
     }
 
-    .btn:active {
-      transform: scale(0.98);
-    }
+    .btn:active { transform: scale(0.98); }
 
     .btn-primary {
-      background-color: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      box-shadow: var(--elevation-1);
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
     }
-    .btn-primary:hover { background-color: #005a30; box-shadow: var(--elevation-2); }
+    .btn-primary:hover { background: var(--primary-hover); }
 
-    .btn-secondary {
-      background-color: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+    .btn-outline {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border-color: var(--border);
     }
-    .btn-secondary:hover { background-color: #b0dfff; }
+    .btn-outline:hover { background: var(--bg-body); border-color: #cbd5e1; }
 
-    .btn-tertiary {
-      background-color: transparent;
-      color: var(--md-sys-color-primary);
-      border: 1px solid var(--md-sys-color-outline);
+    /* Dashboard Direita */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
     }
-    .btn-tertiary:hover { background-color: rgba(0, 107, 58, 0.08); }
 
-    .btn-icon-only {
-      padding: 8px;
-      border-radius: 50%;
-      background: transparent;
-      color: var(--md-sys-color-on-surface-variant);
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
     }
-    .btn-icon-only:hover {
-      background: rgba(0,0,0,0.05);
-      color: var(--md-sys-color-error);
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--border);
+    }
+    
+    .metric-card.highlight::before { background: var(--primary); }
+
+    .metric-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 8px;
+      line-height: 1.2;
+    }
+    
+    .metric-card.highlight .metric-value { color: var(--primary); }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
     /* Lista de Escalas */
-    .escalas-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .escala-item {
+    .feed-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
-      background: var(--md-sys-color-surface);
-      border: 1px solid var(--md-sys-color-surface-variant);
-      border-radius: 16px;
-      transition: background 0.2s;
+      margin-bottom: 16px;
     }
-    
-    .escala-item:hover {
-      background: var(--md-sys-color-primary-container);
-      border-color: transparent;
-    }
+    .feed-header h3 { font-size: 1.1rem; font-weight: 600; }
 
-    .escala-info strong {
-      display: block;
-      font-size: 1.05rem;
-      color: var(--md-sys-color-on-surface);
-      margin-bottom: 4px;
+    .escala-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: box-shadow 0.2s;
     }
+    .escala-card:hover { box-shadow: var(--shadow-md); border-color: #cbd5e1; }
 
-    .escala-info span {
-      font-size: 0.875rem;
-      color: var(--md-sys-color-on-surface-variant);
+    .escala-main { display: flex; flex-direction: column; gap: 4px; }
+    .escala-title { font-weight: 600; font-size: 0.95rem; }
+    .escala-time { 
+      font-size: 0.8rem; 
+      color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
-
-    .escala-info span .material-symbols-outlined {
-      font-size: 16px;
+    
+    .btn-delete {
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: grid;
+      place-items: center;
     }
+    .btn-delete:hover { background: var(--danger-light); color: var(--danger); }
 
+    /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
-      color: var(--md-sys-color-on-surface-variant);
+      padding: 48px 24px;
+      background: transparent;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-muted);
     }
-    .empty-state .material-symbols-outlined {
-      font-size: 48px;
-      opacity: 0.5;
+    .empty-state .material-symbols-outlined { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state h4 { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+    .empty-state p { font-size: 0.85rem; }
+
+    /* Config Panel Compacto */
+    details.config {
+      margin-top: 16px;
+      font-size: 0.85rem;
+    }
+    details.config summary {
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
       margin-bottom: 12px;
     }
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Feedback messages */
-    .msg {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-top: 16px;
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-    .msg-error {
-      background: #ffdad6;
-      color: var(--md-sys-color-error);
-      display: flex;
-    }
-    .msg-success {
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
-      display: flex;
+    /* Responsivo */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 0 16px; gap: 24px; }
+      .topbar { padding: 16px; }
+      .metrics-grid { grid-template-columns: 1fr; }
     }
 
-    /* Results */
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-top: 24px;
-    }
+    /* Ocultar elementos via classe */
+    .hidden { display: none !important; }
 
-    .resumo-card {
-      background: linear-gradient(135deg, var(--md-sys-color-secondary-container), #e3f2fd);
-      padding: 20px;
-      border-radius: 20px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .resumo-card.destaque {
-      background: linear-gradient(135deg, var(--md-sys-color-primary), #004d29);
-      color: white;
-    }
-    .resumo-card.destaque span { color: rgba(255,255,255,0.8); }
-    .resumo-card.destaque strong { color: white; }
-
-    .resumo-card span {
-      font-size: 0.85rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--md-sys-color-on-secondary-container);
-      margin-bottom: 8px;
-    }
-
-    .resumo-card strong {
-      font-size: 1.8rem;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      color: var(--md-sys-color-on-secondary-container);
-      line-height: 1;
-    }
-
-    .detalhe-memoria {
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px dashed var(--md-sys-color-outline);
-      font-size: 0.9rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
-    details {
-      margin-top: 16px;
-    }
-    summary {
-      cursor: pointer;
-      font-weight: 500;
-      color: var(--md-sys-color-primary);
-      user-select: none;
-    }
-
-    /* Config Panel */
-    .config-panel {
-      background: var(--md-sys-color-surface-variant);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 12px;
-    }
-
-    /* Print Styles */
+    /* Estilos de Impressão (PDF) */
     @media print {
-      @page { margin: 15mm; size: A4; }
-      body { background: white; padding: 0; color: black; }
-      .container { max-width: 100%; gap: 0; }
-      .card { box-shadow: none; border: none; padding: 0; margin-bottom: 20px; border-radius: 0; }
-      .card-title { border-bottom: 2px solid black; padding-bottom: 8px; margin-bottom: 16px; color: black; }
+      @page { margin: 10mm; size: A4 portrait; }
+      body { background: white; padding: 0; color: black; font-size: 10pt; }
+      .topbar, .left-col, .btn, .feed-header button, details { display: none !important; }
+      .layout { display: block; margin: 0; padding: 0; }
       
-      /* Hide inputs and buttons */
-      .form-group, .btn-row, .btn, details, .import-box, .empty-state, .msg { display: none !important; }
+      /* Cabeçalho do PDF */
+      .print-header { display: flex !important; align-items: center; gap: 16px; border-bottom: 2px solid black; padding-bottom: 16px; margin-bottom: 24px; }
+      .print-header img { width: 60px; height: 60px; }
+      .print-header h1 { font-size: 16pt; margin: 0; }
       
-      /* Format Header for document */
-      .header { text-align: center; border-bottom: 2px solid black; padding-bottom: 20px; margin-bottom: 20px; }
-      .brasao-container { width: 80px; height: 80px; margin: 0 auto 10px; }
-      .header h1 { font-size: 18pt; color: black; }
-      .header p { font-size: 12pt; color: #333; }
-
-      /* Show only printed versions of data */
-      .print-only { display: block !important; }
-
-      /* Lista de Escalas on Print */
-      .escalas-container { display: table; width: 100%; border-collapse: collapse; margin-top: 10px; }
-      .escala-item { 
-        display: table-row; 
-        border: none; 
-        border-bottom: 1px solid #ccc;
-        background: transparent !important;
-      }
-      .escala-info { display: table-cell; padding: 8px 0; }
-      .escala-info strong { font-size: 12pt; display: inline; margin-right: 15px; }
-      .escala-info span { display: inline; margin-right: 15px; color: black; }
-      .escala-info span .material-symbols-outlined { display: none; }
+      /* Dados do Policial no PDF */
+      .print-dados { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
       
-      /* Resultado on Print */
-      .resumo-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-      .resumo-card { 
-        border: 1px solid black; 
-        background: white !important;
-        color: black !important;
-        border-radius: 0;
-        padding: 10px;
-        flex: 1 1 200px;
-      }
-      .resumo-card.destaque { border: 2px solid black; }
-      .resumo-card.destaque span, .resumo-card.destaque strong { color: black !important; }
-
-      /* Footer for print */
-      .print-footer {
-        display: block !important;
-        margin-top: 40px;
-        padding-top: 10px;
-        border-top: 1px solid black;
-        font-size: 10pt;
-        text-align: center;
-        color: #555;
-      }
+      .metrics-grid { display: flex; gap: 10px; margin-bottom: 24px; }
+      .metric-card { flex: 1; padding: 12px; border: 1px solid black; border-radius: 0; box-shadow: none; }
+      .metric-card::before { display: none; }
+      .metric-value { font-size: 16pt; color: black !important; }
+      
+      .escala-card { border: none; border-bottom: 1px solid #eee; border-radius: 0; padding: 8px 0; margin: 0; }
+      .escala-title { font-size: 10pt; }
+      
+      .print-footer { display: block !important; margin-top: 40px; font-size: 8pt; text-align: center; color: #666; border-top: 1px solid #ccc; padding-top: 10px; }
     }
 
-    .print-only, .print-footer { display: none; }
-
-    /* Modal for ICS Import Preview */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-overlay.active { opacity: 1; pointer-events: all; }
-    
-    .modal {
-      background: var(--md-sys-color-surface);
-      border-radius: 24px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: var(--elevation-3);
-      transform: translateY(20px);
-      transition: transform 0.2s;
-    }
-    .modal-overlay.active .modal { transform: translateY(0); }
-    
-    .modal-header { padding: 24px; border-bottom: 1px solid var(--md-sys-color-surface-variant); }
-    .modal-body { padding: 24px; overflow-y: auto; }
-    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--md-sys-color-surface-variant); display: flex; justify-content: flex-end; gap: 12px; }
-    
-    .checkbox-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 12px;
-      border: 1px solid var(--md-sys-color-outline);
-      border-radius: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-    .checkbox-item:hover { background: rgba(0,0,0,0.02); }
-    .checkbox-item input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--md-sys-color-primary); }
+    .print-header, .print-dados, .print-footer { display: none; }
 
   </style>
 </head>
 <body>
-  
-  <div class="container">
-    <header class="header">
-      <div class="brasao-container">
-        <img class="brasao" src="assets/brasao-19crpm.png" alt="Brasão do 19º CRPM" onerror="this.style.display='none';document.getElementById('fallback').style.display='grid'" />
-        <div id="fallback" class="brasao-fallback">19º<br>CRPM<br>PMGO</div>
-      </div>
-      <h1>Calculadora AC4</h1>
-      <p>Serviço Extraordinário · Portaria SSP Nº 621/2026</p>
-    </header>
 
-    <div id="msgGlobal" class="msg"></div>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/brasao-19crpm.png" alt="Brasão" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2QxZmFlNSIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiMwNTk2NjkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjE5wrogQ1JQTTwvdGV4dD48L3N2Zz4='" />
+      <div>
+        <h1>Calculadora AC4</h1>
+        <p>Polícia Militar de Goiás</p>
+      </div>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <button class="btn btn-outline" onclick="window.print()" id="btn-print" style="width: auto;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">print</span>
+        Salvar PDF
+      </button>
+    </div>
+  </header>
 
-    <section class="card" id="cardDados">
-      <h2 class="card-title">
-        <span class="material-symbols-outlined">badge</span>
-        Dados do Policial
-      </h2>
-      <div class="grid">
-        <div class="form-group">
-          <label for="nomePolicial">Nome Completo</label>
-          <input type="text" id="nomePolicial" placeholder="Ex.: Sgt João da Silva" />
-        </div>
-        <div class="form-group">
-          <label for="postoGraduacao">Posto / Graduação</label>
-          <input type="text" id="postoGraduacao" placeholder="Ex.: 3º SGT" />
-        </div>
-        <div class="form-group">
-          <label for="unidade">Unidade</label>
-          <input type="text" id="unidade" placeholder="Ex.: 19º CRPM" />
-        </div>
-        <div class="form-group">
-          <label for="mesReferencia">Mês de Referência</label>
-          <input type="text" id="mesReferencia" placeholder="Ex.: Julho/2026" />
-        </div>
-      </div>
-      
-      <!-- Printed version of data -->
-      <div class="print-only">
-        <p><strong>Policial:</strong> <span id="printNome"></span> (<span id="printPosto"></span>)</p>
-        <p><strong>Unidade:</strong> <span id="printUnidade"></span> &nbsp;|&nbsp; <strong>Mês Referência:</strong> <span id="printMes"></span></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2 class="card-title">
-        <span class="material-symbols-outlined">event_note</span>
-        Lançamento de Escalas
-      </h2>
-      
-      <div class="grid form-group">
-        <div class="form-group">
-          <label for="escalaInicio">Data e Hora de Início</label>
-          <input type="datetime-local" id="escalaInicio" />
-        </div>
-        <div class="form-group">
-          <label for="escalaFim">Data e Hora de Término</label>
-          <input type="datetime-local" id="escalaFim" />
-        </div>
-      </div>
-      <div class="form-group" style="margin-top: 16px;">
-        <label for="escalaDescricao">Descrição da Escala</label>
-        <textarea id="escalaDescricao" placeholder="Ex.: Policiamento de Evento, AC4, etc."></textarea>
-      </div>
-      
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="adicionarEscalaManual()">
-          <span class="material-symbols-outlined">add</span>
-          Adicionar Escala
-        </button>
-        <button class="btn btn-tertiary" onclick="document.getElementById('icsFile').click()">
-          <span class="material-symbols-outlined">upload_file</span>
-          Importar do Google Agenda (.ics)
-        </button>
-        <input type="file" id="icsFile" accept=".ics" style="display: none;" onchange="importarIcsArquivo(event)" />
-      </div>
-
-      <div class="escalas-container" id="listaEscalas">
-        <!-- Renderizado via JS -->
-      </div>
-    </section>
-
-    <section class="card" id="cardResultado">
-      <h2 class="card-title">
-        <span class="material-symbols-outlined">calculate</span>
-        Resumo e Relatório
-      </h2>
-      
-      <div class="btn-row" style="margin-bottom: 24px;">
-        <button class="btn btn-primary" onclick="calcularTotal()">
-          <span class="material-symbols-outlined">functions</span>
-          Processar Cálculo
-        </button>
-        <button class="btn btn-tertiary" onclick="gerarIcs()" id="btnGerarIcs" style="display: none;">
-          <span class="material-symbols-outlined">calendar_month</span>
-          Gerar .ics
-        </button>
-        <button class="btn btn-tertiary" onclick="prepararImpressao()" id="btnImprimir" style="display: none;">
-          <span class="material-symbols-outlined">print</span>
-          Salvar PDF / Imprimir
-        </button>
-      </div>
-
-      <div id="areaResultado" style="display: none;">
-        <div class="resumo-grid" id="resumoGrid">
-          <!-- Renderizado via JS -->
-        </div>
-        <div class="detalhe-memoria" id="memoriaCalculo">
-          <!-- Renderizado via JS -->
-        </div>
-      </div>
-      
-      <details>
-        <summary><span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px; margin-right: 4px;">settings</span>Avançado: Configurar Tabela de Valores Vigente</summary>
-        <div class="config-panel grid">
-          <div class="form-group">
-            <label>Azul Diurno (R$)</label>
-            <input id="azulDia" type="number" value="30" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>Azul Noturno (R$)</label>
-            <input id="azulNoite" type="number" value="33" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>Vermelha Diurna (R$)</label>
-            <input id="vermelhaDia" type="number" value="40" step="0.01" />
-          </div>
-          <div class="form-group">
-            <label>Vermelha Noturna (R$)</label>
-            <input id="vermelhaNoite" type="number" value="45" step="0.01" />
-          </div>
-        </div>
-      </details>
-    </section>
-
-    <footer class="print-footer">
-      Documento gerado em <span id="dataGeracao"></span>.<br>
-      <strong>Atenção:</strong> Esta é uma simulação de apoio. O pagamento final depende de auditoria administrativa, validação da escala efetivamente cumprida e da tabela oficial vigente expedida pela SSP.
-    </footer>
-  </div>
-
-  <!-- Modal ICS Preview -->
-  <div class="modal-overlay" id="icsModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 class="title" style="color: var(--md-sys-color-primary)">Revisar Importação</h2>
-        <p style="font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); margin-top: 4px;">
-          Filtramos os eventos que contêm "AC4" ou "Extra". Selecione quais deseja incluir.
-        </p>
-      </div>
-      <div class="modal-body" id="icsModalBody">
-        <!-- Checkboxes injectados via JS -->
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-tertiary" onclick="fecharModalIcs()">Cancelar</button>
-        <button class="btn btn-primary" onclick="confirmarImportacaoIcs()">Importar Selecionados</button>
-      </div>
+  <!-- Cabeçalho visível apenas na impressão -->
+  <div class="print-header">
+    <img src="assets/brasao-19crpm.png" onerror="this.style.display='none'" />
+    <div>
+      <h1>Relatório de Escalas AC4 - 19º CRPM</h1>
+      <p>Gerado em <span id="printDate"></span></p>
     </div>
   </div>
 
+  <div class="print-dados" id="printDadosContainer">
+    <div><strong>Nome:</strong> <span id="pNome"></span></div>
+    <div><strong>Posto/Grad.:</strong> <span id="pPosto"></span></div>
+    <div><strong>Unidade:</strong> <span id="pUnidade"></span></div>
+    <div><strong>Referência:</strong> <span id="pMes"></span></div>
+  </div>
+
+  <main class="layout">
+    
+    <!-- Coluna Esquerda: Inputs -->
+    <aside class="left-col">
+      
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-symbols-outlined">person</span>
+          Policial
+        </div>
+        <div class="input-group">
+          <label>Nome Completo</label>
+          <input type="text" class="input-control" id="nomePolicial" placeholder="Ex: Sgt João da Silva" oninput="sincronizarImpressao()" />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="input-group">
+            <label>Posto/Grad.</label>
+            <input type="text" class="input-control" id="postoGraduacao" placeholder="Ex: 3º SGT" oninput="sincronizarImpressao()" />
+          </div>
+          <div class="input-group">
+            <label>Unidade</label>
+            <input type="text" class="input-control" id="unidade" placeholder="Ex: 19º CRPM" oninput="sincronizarImpressao()" />
+          </div>
+        </div>
+        <div class="input-group" style="margin-bottom: 0;">
+          <label>Mês de Referência</label>
+          <input type="text" class="input-control" id="mesReferencia" placeholder="Ex: Jul/2026" oninput="sincronizarImpressao()" />
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-symbols-outlined">add_circle</span>
+          Lançar Escala
+        </div>
+        <div class="input-group">
+          <label>Início</label>
+          <input type="datetime-local" class="input-control" id="escalaInicio" />
+        </div>
+        <div class="input-group">
+          <label>Término</label>
+          <input type="datetime-local" class="input-control" id="escalaFim" />
+        </div>
+        <div class="input-group">
+          <label>Descrição</label>
+          <textarea class="input-control" id="escalaDescricao" placeholder="Onde foi o serviço?"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="adicionarEscala()">Adicionar à lista</button>
+        
+        <div style="text-align: center; margin: 16px 0; color: var(--border);">ou</div>
+        
+        <input type="file" id="icsFile" accept=".ics" class="hidden" onchange="importarICS(event)" />
+        <button class="btn btn-outline" onclick="document.getElementById('icsFile').click()">
+          <span class="material-symbols-outlined" style="font-size: 18px;">upload_file</span>
+          Importar Arquivo .ics
+        </button>
+      </div>
+
+      <details class="config">
+        <summary>Valores da Tabela (Portaria)</summary>
+        <div class="config-grid">
+          <div class="input-group"><label>Azul Dia (R$)</label><input type="number" class="input-control" id="valAD" value="30" step="0.01" oninput="calcularDashboard()"></div>
+          <div class="input-group"><label>Azul Noite (R$)</label><input type="number" class="input-control" id="valAN" value="33" step="0.01" oninput="calcularDashboard()"></div>
+          <div class="input-group"><label>Verm. Dia (R$)</label><input type="number" class="input-control" id="valVD" value="40" step="0.01" oninput="calcularDashboard()"></div>
+          <div class="input-group"><label>Verm. Noite (R$)</label><input type="number" class="input-control" id="valVN" value="45" step="0.01" oninput="calcularDashboard()"></div>
+        </div>
+      </details>
+
+    </aside>
+
+    <!-- Coluna Direita: Dashboard & Lista -->
+    <section class="right-col">
+      
+      <!-- Métricas Reativas -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total de Horas</div>
+          <div class="metric-value" id="totHoras">0,00h</div>
+          <div class="metric-sub" id="totDiurnoNoturno">0,0h diurno / 0,0h noturno</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Escalas</div>
+          <div class="metric-value" id="totQtd">0</div>
+          <div class="metric-sub">Eventos cadastrados</div>
+        </div>
+        <div class="metric-card highlight">
+          <div class="metric-label">Valor Estimado</div>
+          <div class="metric-value" id="totValor">R$ 0,00</div>
+          <div class="metric-sub">Bruto, sem descontos</div>
+        </div>
+      </div>
+
+      <!-- Feed de Escalas -->
+      <div>
+        <div class="feed-header">
+          <h3>Escalas Lançadas</h3>
+          <button class="btn btn-outline hidden" id="btn-export-ics" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="exportarICS()">
+            <span class="material-symbols-outlined" style="font-size: 16px;">download</span> Exportar .ics
+          </button>
+        </div>
+        
+        <div id="listaEscalasContainer">
+          <!-- Renderizado via JS -->
+          <div class="empty-state">
+            <span class="material-symbols-outlined">receipt_long</span>
+            <h4>Nenhuma escala adicionada</h4>
+            <p>Preencha os dados ao lado para iniciar o cálculo.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="print-footer">
+    Simulação de cálculo AC4. O pagamento final está sujeito a validação administrativa, conferência do efetivo cumprimento da escala e normativas vigentes da SSP.
+  </footer>
+
   <script>
     const $ = (id) => document.getElementById(id);
-    const state = { escalas: [], eventosIcsPendentes: [] };
+    let escalas = [];
 
-    // Utilitários de Data e Moeda
-    const moeda = (c) => (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const centavos = (id) => Math.round((parseFloat($(id).value || '0')) * 100);
-    const formataDataHora = (iso) => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-    const calculaDuracaoStr = (ini, fim) => {
-      const min = Math.max(0, Math.round((new Date(fim) - new Date(ini)) / 60000));
-      return `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m`;
-    };
+    // --- Utilitários ---
+    const formataMoeda = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formataData = (iso) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const pegaCentavos = (id) => Math.round((parseFloat($(id).value || '0')) * 100);
 
-    function mostrarMensagem(texto, tipo = 'success') {
-      const el = $('msgGlobal');
-      el.textContent = texto;
-      el.className = 'msg ' + (tipo === 'error' ? 'msg-error' : 'msg-success');
-      el.style.display = 'flex';
-      setTimeout(() => { el.style.display = 'none'; }, 4000);
-    }
-
+    // --- Inicialização ---
     function init() {
       const agora = new Date();
       const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
       $('escalaInicio').value = local.toISOString().slice(0, 16);
       $('escalaFim').value = new Date(local.getTime() + 8 * 3600000).toISOString().slice(0, 16);
-      renderizarEscalas();
+      setInterval(() => { $('printDate').textContent = new Date().toLocaleString('pt-BR'); }, 1000);
     }
 
-    function adicionarEscalaManual() {
+    // --- Reatividade ---
+    function sincronizarImpressao() {
+      $('pNome').textContent = $('nomePolicial').value || '-';
+      $('pPosto').textContent = $('postoGraduacao').value || '-';
+      $('pUnidade').textContent = $('unidade').value || '-';
+      $('pMes').textContent = $('mesReferencia').value || '-';
+    }
+
+    // --- Lógica Principal ---
+    function adicionarEscala() {
       const inicio = $('escalaInicio').value;
       const fim = $('escalaFim').value;
       const descricao = $('escalaDescricao').value.trim();
 
-      if (!inicio || !fim) return mostrarMensagem('Informe início e término.', 'error');
-      if (new Date(fim) <= new Date(inicio)) return mostrarMensagem('Término deve ser maior que início.', 'error');
-      if (!descricao) return mostrarMensagem('A descrição é obrigatória.', 'error');
-
-      state.escalas.push({ inicio, fim, descricao, id: Date.now() });
-      $('escalaDescricao').value = '';
-      renderizarEscalas();
-      mostrarMensagem('Escala adicionada!');
-    }
-
-    function removerEscala(id) {
-      state.escalas = state.escalas.filter(e => e.id !== id);
-      renderizarEscalas();
-      $('areaResultado').style.display = 'none';
-      $('btnGerarIcs').style.display = 'none';
-      $('btnImprimir').style.display = 'none';
-    }
-
-    function renderizarEscalas() {
-      const container = $('listaEscalas');
-      if (!state.escalas.length) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <span class="material-symbols-outlined">event_busy</span>
-            <p>Nenhuma escala lançada.</p>
-          </div>
-        `;
+      if (!inicio || !fim || new Date(fim) <= new Date(inicio)) {
+        alert("Datas inválidas. Verifique início e término.");
+        return;
+      }
+      if (!descricao) {
+        alert("Insira uma descrição para a escala.");
         return;
       }
 
-      container.innerHTML = state.escalas.map(e => `
-        <div class="escala-item">
-          <div class="escala-info">
-            <strong>${e.descricao}</strong>
-            <span>
-              <span class="material-symbols-outlined">schedule</span>
-              ${formataDataHora(e.inicio)} até ${formataDataHora(e.fim)} &nbsp;&bull;&nbsp; ${calculaDuracaoStr(e.inicio, e.fim)}
-            </span>
+      escalas.push({ id: Date.now(), inicio, fim, descricao });
+      $('escalaDescricao').value = '';
+      atualizarUI();
+    }
+
+    function removerEscala(id) {
+      escalas = escalas.filter(e => e.id !== id);
+      atualizarUI();
+    }
+
+    function calcularDashboard() {
+      let totValorCentavos = 0;
+      let minDiurno = 0;
+      let minNoturno = 0;
+
+      escalas.forEach(e => {
+        const dIni = new Date(e.inicio);
+        const mins = Math.max(1, Math.round((new Date(e.fim) - dIni) / 60000));
+        
+        for (let i = 0; i < mins; i++) {
+          const m = new Date(dIni.getTime() + i * 60000);
+          const dia = m.getDay();
+          const hora = m.getHours();
+          const minuto = m.getMinutes();
+          const tempoDia = hora * 60 + minuto;
+          
+          const isNoturno = tempoDia >= 22 * 60 || tempoDia <= 5 * 60;
+          const isVermelha = dia === 5 || dia === 6 || dia === 0;
+
+          if (isNoturno) minNoturno++; else minDiurno++;
+
+          let tarifaCentavos = 0;
+          if (isVermelha && isNoturno) tarifaCentavos = pegaCentavos('valVN');
+          else if (isVermelha) tarifaCentavos = pegaCentavos('valVD');
+          else if (isNoturno) tarifaCentavos = pegaCentavos('valAN');
+          else tarifaCentavos = pegaCentavos('valAD');
+
+          totValorCentavos += tarifaCentavos / 60;
+        }
+      });
+
+      const totalHoras = (minDiurno + minNoturno) / 60;
+      $('totHoras').textContent = totalHoras.toFixed(2).replace('.', ',') + 'h';
+      $('totDiurnoNoturno').textContent = `${(minDiurno/60).toFixed(1)}h diurno / ${(minNoturno/60).toFixed(1)}h noturno`;
+      $('totQtd').textContent = escalas.length;
+      $('totValor').textContent = formataMoeda(totValorCentavos / 100);
+    }
+
+    function atualizarUI() {
+      calcularDashboard();
+      
+      const container = $('listaEscalasContainer');
+      const btnExport = $('btn-export-ics');
+
+      if (escalas.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <span class="material-symbols-outlined">receipt_long</span>
+            <h4>Nenhuma escala adicionada</h4>
+            <p>Preencha os dados ao lado para iniciar o cálculo.</p>
+          </div>`;
+        btnExport.classList.add('hidden');
+        return;
+      }
+
+      btnExport.classList.remove('hidden');
+      
+      // Ordena decrescente por inicio
+      const ordenadas = [...escalas].sort((a,b) => new Date(a.inicio) - new Date(b.inicio));
+
+      container.innerHTML = ordenadas.map(e => {
+        const duracaoMins = Math.round((new Date(e.fim) - new Date(e.inicio)) / 60000);
+        const strDuracao = `${Math.floor(duracaoMins/60)}h ${String(duracaoMins%60).padStart(2,'0')}m`;
+        return `
+        <div class="escala-card">
+          <div class="escala-main">
+            <div class="escala-title">${e.descricao}</div>
+            <div class="escala-time">
+              <span class="material-symbols-outlined" style="font-size: 14px">schedule</span>
+              ${formataData(e.inicio)} até ${formataData(e.fim)} • ${strDuracao}
+            </div>
           </div>
-          <button class="btn-icon-only" onclick="removerEscala(${e.id})" title="Remover">
+          <button class="btn-delete" onclick="removerEscala(${e.id})" title="Excluir">
             <span class="material-symbols-outlined">delete</span>
           </button>
         </div>
-      `).join('');
+      `}).join('');
     }
 
-    // --- Motor de Cálculo ---
-    function getTarifaPorMinuto(data) {
-      const dia = data.getDay();
-      const min = data.getHours() * 60 + data.getMinutes();
-      const isNoite = min >= 22 * 60 || min <= 5 * 60;
-      const isVermelha = dia === 5 || dia === 6 || dia === 0;
-
-      if (isVermelha && isNoite) return { nome: 'Vermelha Noturno', val: centavos('vermelhaNoite') };
-      if (isVermelha) return { nome: 'Vermelha Diurno', val: centavos('vermelhaDia') };
-      if (isNoite) return { nome: 'Azul Noturno', val: centavos('azulNoite') };
-      return { nome: 'Azul Diurno', val: centavos('azulDia') };
-    }
-
-    function calcularTotal() {
-      if (!state.escalas.length) return mostrarMensagem('Adicione escalas primeiro.', 'error');
-      
-      let totMin = 0, totDiurno = 0, totNoturno = 0, totValor = 0;
-      const memoria = {};
-
-      state.escalas.forEach(e => {
-        const ini = new Date(e.inicio);
-        const mins = Math.max(1, Math.round((new Date(e.fim) - ini) / 60000));
-        
-        for (let i = 0; i < mins; i++) {
-          const momento = new Date(ini.getTime() + i * 60000);
-          const t = getTarifaPorMinuto(momento);
-          
-          totValor += t.val / 60;
-          memoria[t.nome] = (memoria[t.nome] || 0) + 1;
-          
-          if (t.nome.includes('Noturno')) totNoturno++;
-          else totDiurno++;
-        }
-        totMin += mins;
-      });
-
-      // Render Dashboard
-      $('resumoGrid').innerHTML = `
-        <div class="resumo-card">
-          <span>Horas Totais</span>
-          <strong>${(totMin / 60).toFixed(2).replace('.', ',')}h</strong>
-        </div>
-        <div class="resumo-card">
-          <span>Diurno / Noturno</span>
-          <strong>${(totDiurno / 60).toFixed(1)} / ${(totNoturno / 60).toFixed(1)}</strong>
-        </div>
-        <div class="resumo-card destaque">
-          <span>Valor Estimado</span>
-          <strong>${moeda(totValor)}</strong>
-        </div>
-      `;
-
-      // Render Memória
-      const linhasMemoria = Object.entries(memoria)
-        .map(([n, m]) => `<li>${n}: ${(m / 60).toFixed(2).replace('.', ',')}h</li>`)
-        .join('');
-      
-      $('memoriaCalculo').innerHTML = `
-        <p><strong>Memória de Cálculo (por minuto):</strong></p>
-        <ul style="margin-left: 20px; margin-top: 8px;">${linhasMemoria}</ul>
-      `;
-
-      $('areaResultado').style.display = 'block';
-      $('btnGerarIcs').style.display = 'inline-flex';
-      $('btnImprimir').style.display = 'inline-flex';
-      
-      // Scroll smooth para resultado
-      $('cardResultado').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // --- Importação .ICS Segura ---
-    function parseIcsDate(v) {
-      if (!v) return null;
-      const txt = String(v).trim().toUpperCase();
-      const z = txt.endsWith('Z');
-      const b = txt.replace(/^VALUE=DATE-TIME:/i, '').replace(/Z$/, '');
-      const d = new Date(Date.UTC(b.slice(0,4), b.slice(4,6)-1, b.slice(6,8), b.slice(9,11)||0, b.slice(11,13)||0, b.slice(13,15)||0));
-      return z ? d : new Date(b.slice(0,4), b.slice(4,6)-1, b.slice(6,8), b.slice(9,11)||0, b.slice(11,13)||0, b.slice(13,15)||0);
-    }
-
-    function importarIcsArquivo(ev) {
-      const file = ev.target.files[0];
+    // --- Importação / Exportação ICS Básico ---
+    function importarICS(event) {
+      const file = event.target.files[0];
       if (!file) return;
-      
       const reader = new FileReader();
       reader.onload = () => {
-        const lines = (reader.result || '').split(/\r?\n/);
-        const eventos = [];
-        let curr = null;
+        const lines = reader.result.split(/\r?\n/);
+        let currentEvent = null;
+        let importCount = 0;
+        
+        // Função auxiliar robusta para data ICS
+        const parseICSDate = (str) => {
+          const match = str.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+          if(!match) return null;
+          const [_, Y,M,D,h,m,s] = match;
+          const date = new Date(Date.UTC(Y, M-1, D, h, m, s));
+          return date.toISOString().slice(0,16); // Formato YYYY-MM-DDThh:mm
+        };
 
         lines.forEach(l => {
-          const lt = l.trim();
-          if (lt === 'BEGIN:VEVENT') curr = {};
-          else if (lt === 'END:VEVENT' && curr) { eventos.push(curr); curr = null; }
-          else if (curr) {
-            if (lt.startsWith('DTSTART')) curr.ini = parseIcsDate(lt.split(':').slice(1).join(':'));
-            else if (lt.startsWith('DTEND')) curr.fim = parseIcsDate(lt.split(':').slice(1).join(':'));
-            else if (lt.startsWith('SUMMARY:')) curr.desc = lt.replace('SUMMARY:', '').trim();
+          if (l.includes('BEGIN:VEVENT')) currentEvent = {};
+          if (l.includes('END:VEVENT') && currentEvent) {
+            if(currentEvent.start && currentEvent.end && currentEvent.desc) {
+              const kw = ['AC4', 'EXTRA', 'SERVICO', 'SERVIÇO', 'PLANTAO', 'PLANTÃO'];
+              const text = currentEvent.desc.toUpperCase();
+              if(kw.some(k => text.includes(k))) {
+                escalas.push({
+                  id: Date.now() + Math.random(),
+                  inicio: currentEvent.start,
+                  fim: currentEvent.end,
+                  descricao: currentEvent.desc
+                });
+                importCount++;
+              }
+            }
+            currentEvent = null;
+          }
+          if (currentEvent) {
+            if (l.startsWith('DTSTART')) currentEvent.start = parseICSDate(l);
+            if (l.startsWith('DTEND')) currentEvent.end = parseICSDate(l);
+            if (l.startsWith('SUMMARY')) currentEvent.desc = l.substring(l.indexOf(':')+1);
           }
         });
-
-        // Filtrar por palavras-chave de interesse
-        const keywords = ['AC4', 'EXTRA', 'SERVIÇO', 'PLANTÃO'];
-        state.eventosIcsPendentes = eventos
-          .filter(e => e.ini && e.fim && e.desc)
-          .filter(e => {
-            const up = e.desc.toUpperCase();
-            return keywords.some(k => up.includes(k));
-          })
-          .map((e, i) => ({
-            id: 'ics_' + i,
-            inicio: e.ini.toISOString().slice(0, 16),
-            fim: e.fim.toISOString().slice(0, 16),
-            descricao: e.desc
-          }));
-
-        if (!state.eventosIcsPendentes.length) {
-          mostrarMensagem('Nenhum evento AC4 ou Extra encontrado no arquivo.', 'error');
+        
+        if(importCount > 0) {
+          atualizarUI();
+          alert(`${importCount} eventos compatíveis importados.`);
         } else {
-          abrirModalIcs();
+          alert('Nenhum evento com palavras-chave (AC4, Extra, etc) encontrado.');
         }
-        $('icsFile').value = ''; // reseta
+        $('icsFile').value = '';
       };
       reader.readAsText(file);
     }
 
-    function abrirModalIcs() {
-      const html = state.eventosIcsPendentes.map(e => `
-        <label class="checkbox-item">
-          <input type="checkbox" value="${e.id}" checked />
-          <div>
-            <strong>${e.descricao}</strong><br>
-            <span style="font-size: 0.85rem; color: #666">${formataDataHora(e.inicio)} - ${formataDataHora(e.fim)}</span>
-          </div>
-        </label>
-      `).join('');
-      $('icsModalBody').innerHTML = html;
-      $('icsModal').classList.add('active');
-    }
-
-    function fecharModalIcs() {
-      $('icsModal').classList.remove('active');
-      state.eventosIcsPendentes = [];
-    }
-
-    function confirmarImportacaoIcs() {
-      const selecionadosIds = Array.from(document.querySelectorAll('#icsModalBody input:checked')).map(el => el.value);
-      const paraImportar = state.eventosIcsPendentes.filter(e => selecionadosIds.includes(e.id));
-      
-      paraImportar.forEach(e => {
-        state.escalas.push({ ...e, id: Date.now() + Math.random() }); // novo ID unico
-      });
-      
-      renderizarEscalas();
-      fecharModalIcs();
-      mostrarMensagem(`${paraImportar.length} eventos importados com sucesso!`);
-    }
-
-    // --- Exportação ICS ---
-    function gerarIcs() {
-      if(!state.escalas.length) return;
-      const fmt = (d) => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-      
-      const linhas = [
-        'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PMGO//Calculadora AC4//PT-BR','CALSCALE:GREGORIAN',
-        ...state.escalas.flatMap((e, i) => [
+    function exportarICS() {
+      if(!escalas.length) return;
+      const formatICS = (d) => new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//PMGO//Calculadora AC4//PT-BR'];
+      escalas.forEach((e, i) => {
+        lines.push(
           'BEGIN:VEVENT',
           `UID:ac4-${Date.now()}-${i}@pmgo`,
-          `DTSTAMP:${fmt(new Date())}`,
-          `DTSTART:${fmt(e.inicio)}`,
-          `DTEND:${fmt(e.fim)}`,
+          `DTSTAMP:${formatICS(new Date())}`,
+          `DTSTART:${formatICS(e.inicio)}`,
+          `DTEND:${formatICS(e.fim)}`,
           `SUMMARY:${e.descricao.replace(/,/g, '\\,')}`,
           'END:VEVENT'
-        ]),
-        'END:VCALENDAR'
-      ];
+        );
+      });
+      lines.push('END:VCALENDAR');
       
-      const blob = new Blob([linhas.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'minhas-escalas-ac4.ics';
-      link.click();
-    }
-
-    // --- Impressão ---
-    function prepararImpressao() {
-      $('printNome').textContent = $('nomePolicial').value || 'Não informado';
-      $('printPosto').textContent = $('postoGraduacao').value || '-';
-      $('printUnidade').textContent = $('unidade').value || '-';
-      $('printMes').textContent = $('mesReferencia').value || '-';
-      $('dataGeracao').textContent = new Date().toLocaleString('pt-BR');
-      
-      window.print();
+      const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'escalas-pmgo.ics';
+      a.click();
     }
 
     init();
