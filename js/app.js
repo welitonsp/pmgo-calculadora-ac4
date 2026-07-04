@@ -14,11 +14,14 @@
   };
 
   /* ------------------------------------------------------------ estado */
-  let escalas = [];          // { id, inicio, fim, descricao }
+  let escalas = [];          // { id, inicio, fim, descricao, tabela }
   let editandoId = null;     // id da escala em edição (null = criando)
   let filtroMes = 'todos';   // 'todos' | 'YYYY-MM'
+  let termoBusca = '';
   let ultimaExcluida = null; // para desfazer
   let importCandidatos = []; // eventos do ICS aguardando confirmação
+  const PORTARIA_ATUAL = 'Portaria SSP nº 621/2026';
+  const VALORES_OFICIAIS = { valAD: '30', valAN: '33', valVD: '40', valVN: '45' };
 
   /* -------------------------------------------------------- utilitários */
   const fmtMoeda = (cent) =>
@@ -35,21 +38,66 @@
       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
     });
 
-  const fmtDiaCompleto = (iso) =>
-    new Date(iso).toLocaleDateString('pt-BR', {
-      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
-    });
+  const fmtData = (iso) =>
+    new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const fmtHora = (iso) =>
+    new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const toInputLocal = (date) => {
     const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     return d.toISOString().slice(0, 16);
   };
 
-  const tarifaCentavos = (id) => Math.round(parseFloat($(id).value || '0') * 100);
-
   const escapeHTML = (s) =>
     String(s).replace(/[&<>"']/g, (c) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const parseMoedaCampo = (id) => {
+    const raw = String($(id).value || '').trim().replace(',', '.');
+    if (!raw) return NaN;
+    const valor = Number(raw);
+    return Number.isFinite(valor) && valor >= 0 ? Math.round(valor * 100) : NaN;
+  };
+
+  const tabelaVazia = () => ({
+    portaria: '',
+    valores: { AD: 0, AN: 0, VD: 0, VN: 0 },
+  });
+
+  function lerTabelaAtual() {
+    return {
+      portaria: PORTARIA_ATUAL,
+      valores: {
+        AD: parseMoedaCampo('valAD'),
+        AN: parseMoedaCampo('valAN'),
+        VD: parseMoedaCampo('valVD'),
+        VN: parseMoedaCampo('valVN'),
+      },
+    };
+  }
+
+  function validarTabelaAtual() {
+    const tabela = lerTabelaAtual();
+    let ok = true;
+    const marca = (id, invalido) => {
+      $(id).closest('.field, .tariff-item').classList.toggle('invalid', invalido);
+      if (invalido) ok = false;
+    };
+    Object.entries({ valAD: 'AD', valAN: 'AN', valVD: 'VD', valVN: 'VN' })
+      .forEach(([id, key]) => marca(id, !Number.isFinite(tabela.valores[key])));
+    if (!ok) {
+      toast('Confira a portaria e todos os valores da tabela antes de calcular.', { erro: true });
+      return null;
+    }
+    return tabela;
+  }
+
+  function tabelaParaCalculo(e) {
+    void e;
+    const atual = lerTabelaAtual();
+    return Object.values(atual.valores).every(Number.isFinite) ? atual : tabelaVazia();
+  }
 
   /* ------------------------------------------------------- persistência */
   function salvar() {
@@ -66,15 +114,8 @@
   }
 
   function carregar() {
-    try {
-      const c = JSON.parse(localStorage.getItem(STORAGE.config) || 'null');
-      if (c) {
-        if (c.ad) $('valAD').value = c.ad;
-        if (c.an) $('valAN').value = c.an;
-        if (c.vd) $('valVD').value = c.vd;
-        if (c.vn) $('valVN').value = c.vn;
-      }
-    } catch { /* config corrompida: usa padrões */ }
+    Object.entries(VALORES_OFICIAIS).forEach(([id, valor]) => { $(id).value = valor; });
+    salvarConfig();
     try {
       const e = JSON.parse(localStorage.getItem(STORAGE.escalas) || '[]');
       if (Array.isArray(e)) escalas = e.filter((x) => x && x.inicio && x.fim);
@@ -119,13 +160,14 @@
 
   /* ------------------------------------------------------------- cálculo
      Regras (Portaria SSP): minuto a minuto.
-     - Noturno: 22:00 até 05:00 (inclusive).
+     - Noturno: 22:00 até 05:00.
      - Vermelha: sexta, sábado e domingo.  */
   function calcularEscala(e) {
     const ini = new Date(e.inicio);
     const fim = new Date(e.fim);
     const mins = Math.max(1, Math.round((fim - ini) / 60000));
     const cont = { AD: 0, AN: 0, VD: 0, VN: 0 };
+    const tabela = tabelaParaCalculo(e);
 
     for (let i = 0; i < mins; i++) {
       const m = new Date(ini.getTime() + i * 60000);
@@ -136,12 +178,8 @@
       cont[vermelha ? (noturno ? 'VN' : 'VD') : (noturno ? 'AN' : 'AD')]++;
     }
 
-    const tarifas = {
-      AD: tarifaCentavos('valAD'), AN: tarifaCentavos('valAN'),
-      VD: tarifaCentavos('valVD'), VN: tarifaCentavos('valVN'),
-    };
     const valorCentavos = Math.round(
-      Object.keys(cont).reduce((s, k) => s + (cont[k] * tarifas[k]) / 60, 0)
+      Object.keys(cont).reduce((s, k) => s + (cont[k] * tabela.valores[k]) / 60, 0)
     );
     return {
       mins,
@@ -149,14 +187,29 @@
       minNoturno: cont.AN + cont.VN,
       minVermelha: cont.VD + cont.VN,
       valorCentavos,
+      tabela,
     };
   }
 
   const escalasFiltradas = () => {
-    const lista = filtroMes === 'todos'
+    const porMes = filtroMes === 'todos'
       ? escalas
       : escalas.filter((e) => e.inicio.slice(0, 7) === filtroMes);
-    return [...lista].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+    const termo = termoBusca.trim().toLocaleLowerCase('pt-BR');
+    const filtradas = termo
+      ? porMes.filter((e) => {
+          const r = calcularEscala(e);
+          const tipo = [
+            r.minVermelha > 0 ? 'vermelha' : '',
+            r.minVermelha < r.mins ? 'azul' : '',
+            r.minNoturno > 0 ? 'noturno' : 'diurno',
+          ].join(' ');
+          return `${e.descricao} ${tipo} ${e.inicio} ${e.fim}`
+            .toLocaleLowerCase('pt-BR')
+            .includes(termo);
+        })
+      : porMes;
+    return [...filtradas].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
   };
 
   /* --------------------------------------------------------------- ações */
@@ -185,14 +238,16 @@
   function submeterFormulario() {
     const dados = validarFormulario();
     if (!dados) return;
+    const tabelaAtual = validarTabelaAtual();
+    if (!tabelaAtual) return;
 
     if (editandoId !== null) {
       const idx = escalas.findIndex((e) => e.id === editandoId);
-      if (idx >= 0) escalas[idx] = { ...escalas[idx], ...dados };
+      if (idx >= 0) escalas[idx] = { ...escalas[idx], ...dados, tabela: escalas[idx].tabela || tabelaAtual };
       cancelarEdicao();
       toast('Escala atualizada.');
     } else {
-      escalas.push({ id: Date.now() + Math.random(), ...dados });
+      escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
       $('escalaDescricao').value = '';
       toast('Escala adicionada.');
     }
@@ -209,8 +264,8 @@
     $('escalaDescricao').value = e.descricao;
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
-    $('formTitle').textContent = 'Editar escala';
-    document.querySelector('.left-col').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('formTitle').lastChild.textContent = 'Editar escala';
+    document.querySelector('.launch-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     $('escalaDescricao').focus();
   }
 
@@ -218,7 +273,7 @@
     editandoId = null;
     $('btnSubmit').textContent = 'Adicionar escala';
     $('btnCancelEdit').classList.add('hidden');
-    $('formTitle').textContent = 'Lançar escala';
+    $('formTitle').lastChild.textContent = 'Lançar escala';
     $('escalaDescricao').value = '';
     ['fieldInicio', 'fieldFim', 'fieldDescricao'].forEach((f) => $(f).classList.remove('invalid'));
   }
@@ -285,9 +340,11 @@
     const totValor = resultados.reduce((s, x) => s + x.r.valorCentavos, 0);
 
     $('totHoras').textContent = fmtHoras(totMins);
-    $('totDiurnoNoturno').textContent =
-      `${fmtHoras(totDiurno)} diurno · ${fmtHoras(totNoturno)} noturno`;
-    $('totQtd').textContent = String(lista.length);
+    $('totDiurnas').textContent = fmtHoras(totDiurno);
+    $('totNoturnas').textContent = fmtHoras(totNoturno);
+    $('pctDiurnas').textContent = totMins ? `${((totDiurno / totMins) * 100).toFixed(1).replace('.', ',')}% do total` : '0% do total';
+    $('pctNoturnas').textContent = totMins ? `${((totNoturno / totMins) * 100).toFixed(1).replace('.', ',')}% do total` : '0% do total';
+    $('totQtd').textContent = `${lista.length} escala${lista.length === 1 ? '' : 's'} no período`;
     $('totValor').textContent = fmtMoeda(totValor);
     $('mobileTotal').textContent = fmtMoeda(totValor);
 
@@ -296,8 +353,6 @@
 
     // botões dependentes de dados
     const temDados = lista.length > 0;
-    $('btnExportIcs').classList.toggle('hidden', !temDados);
-    $('btnExportCsv').classList.toggle('hidden', !temDados);
     $('btnClearAll').classList.toggle('hidden', escalas.length === 0);
 
     // lista
@@ -308,41 +363,52 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>
           </svg>
-          <h3>${filtroMes === 'todos' ? 'Nenhuma escala lançada' : 'Nenhuma escala neste mês'}</h3>
-          <p>${filtroMes === 'todos'
-            ? 'Preencha o formulário ou importe um arquivo .ics para começar.'
-            : 'Escolha outro mês no filtro acima.'}</p>
+          <h3>${termoBusca ? 'Nenhuma escala encontrada' : filtroMes === 'todos' ? 'Nenhuma escala lançada' : 'Nenhuma escala neste mês'}</h3>
+          <p>${termoBusca
+            ? 'Ajuste a busca no cabeçalho para localizar outras escalas.'
+            : filtroMes === 'todos'
+              ? 'Preencha o formulário ao lado ou importe um arquivo .ics para iniciar o cálculo.'
+              : 'Escolha outro mês no filtro acima.'}</p>
         </div>`;
       $('printDate').textContent = new Date().toLocaleString('pt-BR');
       return;
     }
 
-    let html = '';
-    let diaAtual = '';
-    resultados.forEach(({ e, r }, idx) => {
-      const dia = e.inicio.slice(0, 10);
-      if (dia !== diaAtual) {
-        diaAtual = dia;
-        html += `<div class="day-group">${escapeHTML(fmtDiaCompleto(e.inicio))}</div>`;
-      }
-      const chips = [];
-      if (r.minVermelha > 0) chips.push('<span class="chip chip-red">Vermelha</span>');
-      if (r.minVermelha < r.mins) chips.push('<span class="chip chip-green">Azul</span>');
-      if (r.minNoturno > 0) chips.push(`<span class="chip chip-night">${fmtHoras(r.minNoturno)} noturno</span>`);
-      chips.push(`<span class="chip chip-neutral">${fmtHoras(r.mins)}</span>`);
+    let html = `
+      <div class="table-wrap">
+        <table class="escala-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Início</th>
+              <th>Término</th>
+              <th>Tipo</th>
+              <th>Horas</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>`;
+    resultados.forEach(({ e, r }) => {
+      const tipoChips = [];
+      if (r.minVermelha > 0) tipoChips.push('<span class="chip chip-red">Vermelha</span>');
+      if (r.minVermelha < r.mins) tipoChips.push('<span class="chip chip-blue">Azul</span>');
+      tipoChips.push(r.minNoturno > 0
+        ? `<span class="chip chip-night">${fmtHoras(r.minNoturno)} noturno</span>`
+        : '<span class="chip chip-day">Diurno</span>');
 
       html += `
-        <article class="escala-card" style="animation-delay:${Math.min(idx * 30, 300)}ms">
-          <div class="escala-top">
-            <div class="escala-info">
-              <div class="escala-title">${escapeHTML(e.descricao)}</div>
-              <div class="escala-time">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-                </svg>
-                ${fmtDataHora(e.inicio)} → ${fmtDataHora(e.fim)}
-              </div>
-            </div>
+        <tr>
+          <td data-label="Data">
+            ${fmtData(e.inicio)}
+            <span class="table-note">${escapeHTML(e.descricao)}</span>
+          </td>
+          <td data-label="Início">${fmtHora(e.inicio)}</td>
+          <td data-label="Término">${fmtData(e.inicio) === fmtData(e.fim) ? fmtHora(e.fim) : `${fmtData(e.fim)} ${fmtHora(e.fim)}`}</td>
+          <td data-label="Tipo"><div class="chips">${tipoChips.join('')}</div></td>
+          <td data-label="Horas">${fmtHoras(r.mins)}</td>
+          <td data-label="Valor" class="value-cell">${fmtMoeda(r.valorCentavos)}</td>
+          <td data-label="Ações">
             <div class="escala-actions">
               <button class="btn-icon" data-acao="duplicar" data-id="${e.id}" title="Duplicar para o dia seguinte" aria-label="Duplicar escala">
                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -360,13 +426,10 @@
                 </svg>
               </button>
             </div>
-          </div>
-          <div class="escala-bottom">
-            <div class="chips">${chips.join('')}</div>
-            <div class="escala-valor">${fmtMoeda(r.valorCentavos)}</div>
-          </div>
-        </article>`;
+          </td>
+        </tr>`;
     });
+    html += '</tbody></table></div>';
     container.innerHTML = html;
     $('printDate').textContent = new Date().toLocaleString('pt-BR');
   }
@@ -384,12 +447,10 @@
       }).join('');
     sel.value = meses.includes(atual) ? atual : 'todos';
     filtroMes = sel.value;
-    sel.classList.toggle('hidden', meses.length < 2);
   }
 
   /* ------------------------------------------------------------- ICS */
   function parseICS(texto) {
-    // desdobra linhas continuadas (RFC 5545: linhas seguintes começam com espaço/tab)
     const linhas = texto.split(/\r?\n/).reduce((acc, l) => {
       if (/^[ \t]/.test(l) && acc.length) acc[acc.length - 1] += l.slice(1);
       else acc.push(l);
@@ -407,7 +468,7 @@
       return isNaN(d) ? null : toInputLocal(d);
     };
 
-    const unescape = (s) =>
+    const unescapeICS = (s) =>
       s.replace(/\\n/gi, ' ').replace(/\\([,;\\])/g, '$1').trim();
 
     const eventos = [];
@@ -415,16 +476,30 @@
     for (const l of linhas) {
       if (l.startsWith('BEGIN:VEVENT')) { atual = {}; continue; }
       if (l.startsWith('END:VEVENT')) {
-        if (atual && atual.inicio && atual.fim && atual.descricao) eventos.push(atual);
+        if (atual && atual.inicio && atual.fim && atual.descricao &&
+            new Date(atual.fim) > new Date(atual.inicio)) {
+          eventos.push(atual);
+        }
         atual = null;
         continue;
       }
       if (!atual) continue;
       if (l.startsWith('DTSTART')) atual.inicio = parseData(l);
       else if (l.startsWith('DTEND')) atual.fim = parseData(l);
-      else if (l.startsWith('SUMMARY')) atual.descricao = unescape(l.slice(l.indexOf(':') + 1));
+      else if (l.startsWith('SUMMARY')) atual.descricao = unescapeICS(l.slice(l.indexOf(':') + 1));
     }
     return eventos;
+  }
+
+  function filtrarEventosImportacao(eventos) {
+    const inicio = $('importInicio').value ? new Date(`${$('importInicio').value}T00:00:00`) : null;
+    const fim = $('importFim').value ? new Date(`${$('importFim').value}T00:00:00`) : null;
+    if (fim) fim.setDate(fim.getDate() + 1);
+    return eventos.filter((ev) => {
+      const evInicio = new Date(ev.inicio);
+      const evFim = new Date(ev.fim);
+      return (!inicio || evFim > inicio) && (!fim || evInicio < fim);
+    });
   }
 
   function importarICS(event) {
@@ -432,10 +507,10 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const eventos = parseICS(String(reader.result));
+      const eventos = filtrarEventosImportacao(parseICS(String(reader.result)));
       $('icsFile').value = '';
       if (!eventos.length) {
-        toast('Nenhum evento válido encontrado no arquivo.', { erro: true });
+        toast('Nenhum evento válido encontrado no arquivo ou no intervalo informado.', { erro: true });
         return;
       }
       const kw = ['AC4', 'EXTRA', 'SERVICO', 'SERVIÇO', 'PLANTAO', 'PLANTÃO', 'ESCALA'];
@@ -443,15 +518,11 @@
         ...ev,
         selecionado: kw.some((k) => ev.descricao.toUpperCase().includes(k)),
       }));
-      abrirModalImport();
+      renderModalImport();
+      $('modalImport').showModal();
     };
     reader.onerror = () => toast('Não foi possível ler o arquivo.', { erro: true });
     reader.readAsText(file);
-  }
-
-  function abrirModalImport() {
-    renderModalImport();
-    $('modalImport').showModal();
   }
 
   function renderModalImport() {
@@ -470,6 +541,8 @@
   }
 
   function confirmarImport() {
+    const tabelaAtual = validarTabelaAtual();
+    if (!tabelaAtual) return;
     const selecionados = importCandidatos.filter((e) => e.selecionado);
     selecionados.forEach((ev) => {
       escalas.push({
@@ -477,6 +550,7 @@
         inicio: ev.inicio,
         fim: ev.fim,
         descricao: ev.descricao,
+        tabela: tabelaAtual,
       });
     });
     $('modalImport').close();
@@ -489,7 +563,10 @@
   /* ------------------------------------------------------- exportações */
   function exportarICS() {
     const lista = escalasFiltradas();
-    if (!lista.length) return;
+    if (!lista.length) {
+      toast('Adicione ou importe escalas antes de gerar o arquivo .ics.', { erro: true });
+      return;
+    }
     const fmt = (iso) =>
       new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const esc = (s) => s.replace(/\\/g, '\\\\').replace(/([,;])/g, '\\$1').replace(/\n/g, '\\n');
@@ -507,16 +584,19 @@
     });
     linhas.push('END:VCALENDAR');
     baixar(linhas.join('\r\n'), 'escalas-ac4.ics', 'text/calendar');
-    toast('Arquivo .ics gerado.');
+    toast('Arquivo gerado. Na Agenda Google, use "Importar" para adicionar as escalas.');
   }
 
   function exportarCSV() {
     const lista = escalasFiltradas();
-    if (!lista.length) return;
+    if (!lista.length) {
+      toast('Adicione ou importe escalas antes de exportar CSV.', { erro: true });
+      return;
+    }
     const sep = ';';
     const num = (cent) => (cent / 100).toFixed(2).replace('.', ',');
     const linhas = [
-      ['Descrição', 'Início', 'Término', 'Horas', 'Horas diurnas', 'Horas noturnas', 'Valor (R$)'].join(sep),
+      ['Descrição', 'Início', 'Término', 'Horas', 'Horas diurnas', 'Horas noturnas', 'Portaria/tabela', 'Valor (R$)'].join(sep),
     ];
     let total = 0;
     lista.forEach((e) => {
@@ -528,10 +608,11 @@
         (r.mins / 60).toFixed(2).replace('.', ','),
         (r.minDiurno / 60).toFixed(2).replace('.', ','),
         (r.minNoturno / 60).toFixed(2).replace('.', ','),
+        `"${(r.tabela.portaria || '').replace(/"/g, '""')}"`,
         num(r.valorCentavos),
       ].join(sep));
     });
-    linhas.push(['TOTAL', '', '', '', '', '', num(total)].join(sep));
+    linhas.push(['TOTAL', '', '', '', '', '', '', num(total)].join(sep));
     baixar('﻿' + linhas.join('\r\n'), 'escalas-ac4.csv', 'text/csv;charset=utf-8');
     toast('Planilha CSV gerada.');
   }
@@ -568,8 +649,9 @@
     $('btnExportCsv').addEventListener('click', exportarCSV);
     $('btnClearAll').addEventListener('click', limparTudo);
     $('filtroMes').addEventListener('change', (ev) => { filtroMes = ev.target.value; render(); });
+    $('buscaEscala').addEventListener('input', (ev) => { termoBusca = ev.target.value; render(); });
     $('mobileAdd').addEventListener('click', () => {
-      document.querySelector('.left-col').scrollIntoView({ behavior: 'smooth' });
+      document.querySelector('.launch-panel').scrollIntoView({ behavior: 'smooth' });
       $('escalaInicio').focus();
     });
 
@@ -580,7 +662,10 @@
     });
 
     ['valAD', 'valAN', 'valVD', 'valVN'].forEach((id) =>
-      $(id).addEventListener('input', salvarConfig));
+      $(id).addEventListener('input', () => {
+        $(id).closest('.field, .tariff-item').classList.remove('invalid');
+        salvarConfig();
+      }));
 
     // ações delegadas da lista
     $('listaEscalas').addEventListener('click', (ev) => {

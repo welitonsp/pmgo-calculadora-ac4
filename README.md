@@ -5,7 +5,8 @@ Funciona no computador e no celular, pode ser **instalada como aplicativo (PWA)*
 e continua funcionando **offline** após o primeiro acesso.
 
 > Base normativa declarada: Portaria SSP nº 621/2026 — vigência a partir de 01/07/2026.
-> Os valores da tabela são configuráveis dentro da própria ferramenta.
+> Valores aplicados: azul diurno R$ 30,00/h, azul noturno R$ 33,00/h,
+> vermelha diurna R$ 40,00/h e vermelha noturna R$ 45,00/h.
 
 ## Acesso
 
@@ -20,6 +21,7 @@ No celular, use a opção **"Adicionar à tela inicial"** do navegador para inst
   - noturno: 22h às 5h;
   - tarifa vermelha: sexta, sábado e domingo;
   - tarifa azul: demais dias.
+- **Tabela oficial da Portaria SSP nº 621/2026** exibida na interface e usada no cálculo.
 - **Dashboard reativo** com total de horas, quantidade de escalas e valor estimado.
 - **Filtro por mês** quando há escalas em meses diferentes.
 - **Edição, duplicação (para o dia seguinte) e exclusão com desfazer**.
@@ -27,7 +29,7 @@ No celular, use a opção **"Adicionar à tela inicial"** do navegador para inst
   eventos com palavras-chave (AC4, extra, serviço, plantão, escala) já vêm pré-selecionados.
 - **Exportação**: arquivo `.ics` (Google Calendar) e planilha `.csv` (Excel/Sheets).
 - **Relatório em PDF** via botão "Salvar PDF" (impressão do navegador), com brasão,
-  agrupamento por dia e valor por escala.
+  tabela de escalas e valor por escala.
 - **Tema claro/escuro** com detecção automática da preferência do sistema.
 - **Dados salvos no dispositivo** (localStorage) — nada é enviado a servidores.
 
