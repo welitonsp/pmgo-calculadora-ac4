@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=14">
+  <link rel="stylesheet" href="css/styles.css?v=15">
   <script>
     (function () {
       try {
@@ -51,11 +51,9 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-badge" aria-hidden="true">
-          <img src="assets/brasao-19crpm.png" alt="" class="brand-brasao"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none">
-            <rect x="4" y="3" width="16" height="18" rx="2"/>
-            <path d="M8 7h8M8 11h8M8 15h3M14 15h2"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M12 2 4 6v6c0 5 3.6 9.4 8 11 4.4-1.6 8-6 8-11V6L12 2z"/>
+            <path d="m9 12 2 2 4-4"/>
           </svg>
         </div>
         <div class="brand-text">
@@ -107,55 +105,11 @@
     </div>
   </header>
 
-  <!-- Painel de identificação do policial -->
-  <details class="officer-details" id="officerDetails">
-    <summary class="officer-summary">
-      <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-      </svg>
-      <span>Identificação do policial</span>
-      <span class="officer-preview" id="officerPreview"></span>
-      <svg class="icon icon-sm chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="m6 9 6 6 6-6"/>
-      </svg>
-    </summary>
-    <div class="officer-body">
-      <div class="officer-grid">
-        <div class="field">
-          <label for="officerNome">Nome completo</label>
-          <input type="text" class="control" id="officerNome" placeholder="Ex.: João da Silva" autocomplete="name">
-        </div>
-        <div class="field">
-          <label for="officerPosto">Posto / Graduação</label>
-          <input type="text" class="control" id="officerPosto" placeholder="Ex.: Cabo PM" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="officerMatricula">Matrícula</label>
-          <input type="text" class="control" id="officerMatricula" placeholder="Ex.: 12345-6" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="officerUnidade">Unidade / BM</label>
-          <input type="text" class="control" id="officerUnidade" placeholder="Ex.: 19º CRPM" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="officerMes">Mês de referência</label>
-          <input type="month" class="control" id="officerMes">
-        </div>
-      </div>
-      <p class="officer-note">Dados salvos localmente no dispositivo. Aparecem no relatório PDF.</p>
-    </div>
-  </details>
-
   <!-- Cabeçalho do relatório impresso -->
   <div class="print-only print-header">
-    <div class="print-header-row">
-      <img src="assets/brasao-19crpm.png" alt="Brasão PMGO" class="print-brasao"
-           onerror="this.style.display='none'">
-      <div>
-        <h1>Relatório de Escalas AC4</h1>
-        <p id="printOfficerInfo"></p>
-        <p>Simulação gerada em <span id="printDate"></span></p>
-      </div>
+    <div>
+      <h1>Relatório de Escalas AC4</h1>
+      <p>Simulação gerada em <span id="printDate"></span></p>
     </div>
   </div>
 
@@ -212,6 +166,7 @@
     </section>
 
     <section class="operation-grid">
+      <!-- CARD: Lançar Escala -->
       <section class="panel launch-panel">
         <div class="panel-body">
           <h2 class="panel-title" id="formTitle">
@@ -222,104 +177,147 @@
           </h2>
 
           <form id="formEscala" novalidate>
-            <div class="launch-row">
+            <div class="launch-grid">
+
               <div class="field" id="fieldInicio">
                 <label for="escalaInicio">Início</label>
                 <input type="datetime-local" class="control" id="escalaInicio" required aria-required="true">
                 <p class="field-error" role="alert">Informe a data e hora de início.</p>
               </div>
+
               <div class="field" id="fieldDuracao">
                 <label for="escalaDuracao">Duração</label>
                 <select class="control" id="escalaDuracao">
                   <option value="">Personalizada</option>
-                  <option value="12">Escala 12 horas</option>
-                  <option value="14">Escala 14 horas</option>
-                  <option value="24">Escala 24 horas</option>
+                  <option value="12">12 horas</option>
+                  <option value="14">14 horas</option>
+                  <option value="24">24 horas</option>
                 </select>
               </div>
+
               <div class="field" id="fieldFim">
                 <label for="escalaFim">Término</label>
                 <input type="datetime-local" class="control" id="escalaFim" required aria-required="true">
                 <p class="field-error" role="alert">O término deve ser depois do início.</p>
               </div>
-              <div class="field" id="fieldDescricao">
+
+              <div class="field" id="fieldQtdPm">
+                <label for="escalaQtdPm">Qtd. PM</label>
+                <input type="number" class="control" id="escalaQtdPm"
+                       min="1" max="999" value="1"
+                       placeholder="1"
+                       title="Quantidade de policiais na escala">
+                <p class="field-hint">Valor multiplicado pelo nº de PMs</p>
+              </div>
+
+              <div class="field launch-full" id="fieldDescricao">
                 <label for="escalaDescricao">Descrição <span class="field-optional">(opcional)</span></label>
                 <input type="text" class="control" id="escalaDescricao" maxlength="120"
-                       placeholder="Ex.: Policiamento ostensivo - Evento">
+                       placeholder="Ex.: Policiamento ostensivo — Evento">
               </div>
-              <button type="submit" class="btn btn-primary" id="btnSubmit">Adicionar escala</button>
-            </div>
 
-            <button type="button" class="btn btn-ghost btn-block hidden" id="btnCancelEdit" style="margin-top:8px">Cancelar edição</button>
+              <div class="launch-full">
+                <button type="submit" class="btn btn-primary btn-block" id="btnSubmit">
+                  <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  Adicionar escala
+                </button>
+                <button type="button" class="btn btn-ghost btn-block hidden" id="btnCancelEdit" style="margin-top:8px">Cancelar edição</button>
+              </div>
+
+            </div>
           </form>
         </div>
       </section>
 
+      <!-- CARD: Valores da Tabela -->
       <section class="panel values-panel">
         <div class="panel-body">
           <h2 class="panel-title">
-          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          Valores da tabela
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Valores da tabela
           </h2>
-          <div class="config-grid">
-            <div class="tariff-item">
-              <span class="tariff-dot tariff-blue"></span>
-              <span class="tariff-name">Azul dia</span>
-              <span class="tariff-value">R$ 30,00/h</span>
+
+          <div class="tariff-list">
+            <div class="tariff-item tariff-item-lg">
+              <div class="tariff-left">
+                <span class="tariff-dot tariff-blue"></span>
+                <div>
+                  <span class="tariff-name">Azul — diurno</span>
+                  <span class="tariff-period">Seg a Qui · 05h–22h</span>
+                </div>
+              </div>
+              <span class="tariff-value">R$&nbsp;30,00<small>/h</small></span>
               <input type="hidden" id="valAD" value="30">
             </div>
-            <div class="tariff-item">
-              <span class="tariff-dot tariff-blue-dark"></span>
-              <span class="tariff-name">Azul noite</span>
-              <span class="tariff-value">R$ 33,00/h</span>
+            <div class="tariff-item tariff-item-lg">
+              <div class="tariff-left">
+                <span class="tariff-dot tariff-blue-dark"></span>
+                <div>
+                  <span class="tariff-name">Azul — noturno</span>
+                  <span class="tariff-period">Seg a Qui · 22h–05h</span>
+                </div>
+              </div>
+              <span class="tariff-value">R$&nbsp;33,00<small>/h</small></span>
               <input type="hidden" id="valAN" value="33">
             </div>
-            <div class="tariff-item">
-              <span class="tariff-dot tariff-red"></span>
-              <span class="tariff-name">Vermelha dia</span>
-              <span class="tariff-value">R$ 40,00/h</span>
+            <div class="tariff-item tariff-item-lg">
+              <div class="tariff-left">
+                <span class="tariff-dot tariff-red"></span>
+                <div>
+                  <span class="tariff-name">Vermelha — diurno</span>
+                  <span class="tariff-period">Sex / Sáb / Dom · 05h–22h</span>
+                </div>
+              </div>
+              <span class="tariff-value">R$&nbsp;40,00<small>/h</small></span>
               <input type="hidden" id="valVD" value="40">
             </div>
-            <div class="tariff-item">
-              <span class="tariff-dot tariff-red-dark"></span>
-              <span class="tariff-name">Vermelha noite</span>
-              <span class="tariff-value">R$ 45,00/h</span>
+            <div class="tariff-item tariff-item-lg">
+              <div class="tariff-left">
+                <span class="tariff-dot tariff-red-dark"></span>
+                <div>
+                  <span class="tariff-name">Vermelha — noturno</span>
+                  <span class="tariff-period">Sex / Sáb / Dom · 22h–05h</span>
+                </div>
+              </div>
+              <span class="tariff-value">R$&nbsp;45,00<small>/h</small></span>
               <input type="hidden" id="valVN" value="45">
             </div>
           </div>
+
           <p class="config-note">
-            Valores conforme Portaria SSP nº 621/2026. Confira a tabela vigente antes de usar o resultado.
-            Noturno: 22h às 5h · Vermelha: sexta, sábado e domingo.
+            Portaria SSP nº 621/2026 · Confira a tabela vigente antes de usar o resultado.
           </p>
         </div>
       </section>
     </section>
 
-      <div class="feed">
-        <div class="feed-header">
-          <h2>Escalas lançadas</h2>
-          <div class="feed-tools">
-            <select class="select-compact select-sm" id="filtroMes" aria-label="Filtrar por mês">
-              <option value="">Todos os meses</option>
-            </select>
-            <button class="btn btn-danger-soft btn-sm hidden" id="btnClearAll">Limpar tudo</button>
-          </div>
+    <div class="feed">
+      <div class="feed-header">
+        <h2>Escalas lançadas</h2>
+        <div class="feed-tools">
+          <select class="select-compact select-sm" id="filtroMes" aria-label="Filtrar por mês">
+            <option value="">Todos os meses</option>
+          </select>
+          <button class="btn btn-danger-soft btn-sm hidden" id="btnClearAll">Limpar tudo</button>
         </div>
-        <div id="listaEscalas"><!-- renderizado via JS --></div>
       </div>
+      <div id="listaEscalas"><!-- renderizado via JS --></div>
+    </div>
 
-      <div class="legal-alert">
-        Atenção: os valores apresentados são simulados e não possuem efeito financeiro.
-        Sujeitos à validação e conferência administrativa.
-      </div>
+    <div class="legal-alert">
+      Atenção: os valores apresentados são simulados e não possuem efeito financeiro.
+      Sujeitos à validação e conferência administrativa.
+    </div>
 
-      <footer class="print-only print-footer">
-        Documento de simulação de cálculo AC4 gerado pela Calculadora AC4.
-        Valor simulado, sem efeito financeiro oficial, sujeito a validação administrativa,
-        conferência do efetivo cumprimento da escala e normativas vigentes da SSP.
-      </footer>
+    <footer class="print-only print-footer">
+      Documento de simulação de cálculo AC4 gerado pela Calculadora AC4.
+      Valor simulado, sem efeito financeiro oficial, sujeito a validação administrativa,
+      conferência do efetivo cumprimento da escala e normativas vigentes da SSP.
+    </footer>
   </main>
 
   <!-- Barra fixa no mobile -->
@@ -425,6 +423,6 @@
     </div>
   </dialog>
 
-  <script src="js/app.js?v=14"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>
