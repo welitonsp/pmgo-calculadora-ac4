@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=23">
+  <link rel="stylesheet" href="css/styles.css?v=24">
   <script>
     (function () {
       try {
@@ -107,10 +107,14 @@
 
   <!-- Cabeçalho do relatório impresso -->
   <div class="print-only print-header">
-    <div>
-      <h1>Relatório de Escalas AC4</h1>
-      <p>Simulação gerada em <span id="printDate"></span></p>
+    <div class="print-header-main">
+      <div>
+        <h1>Relatório de Escalas de Serviço Extra — AC4 / PMGO</h1>
+        <p>Emitido em <span id="printDate"></span></p>
+      </div>
+      <p class="print-portaria">Portaria SSP n.º 621/2026</p>
     </div>
+    <div id="printSummary" class="print-summary"></div>
   </div>
 
   <main class="layout">
@@ -298,7 +302,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v23 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v24 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -424,7 +428,7 @@
     </div>
   </dialog>
 
-  <script src="js/app.js?v=23"></script>
+  <script src="js/app.js?v=24"></script>
 
   <!-- Cloudflare Web Analytics -->
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3b1137c9d2024604bff681a3d09a202e"}'></script>

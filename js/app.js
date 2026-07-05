@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v23
+   Calculadora AC4 — v24
    ========================================================================== */
 (() => {
   'use strict';
@@ -470,31 +470,63 @@
     const totValor = resultados.reduce((s, x) => s + x.r.valorCentavos * (x.e.qtdPm || 1), 0);
 
     const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const dataAbrev = (iso) => {
+    const SEP = '─────────────────────';
+
+    const dataCompleta = (iso) => {
       const d = new Date(iso);
-      return `${DIAS[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return `${DIAS[d.getDay()]}, ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     };
 
-    const titulo = lista.length === 1 ? '*AC4 · Simulação de Escala*' : '*AC4 · Simulação de Escalas*';
-    let texto = `${titulo}\n\n`;
+    let texto = `📋 *SIMULAÇÃO DE ESCALAS — AC4 / PMGO*\n${SEP}\n\n`;
 
-    resultados.forEach(({ e, r }) => {
-      const qtd = e.qtdPm || 1;
-      const tipo = r.minVermelha > 0 ? '🔴' : '🔵';
-      const mesmodia = fmtData(e.inicio) === fmtData(e.fim);
-      const horaFim = mesmodia
+    resultados.forEach(({ e, r }, i) => {
+      const qtd       = e.qtdPm || 1;
+      const isVerm    = r.minVermelha > 0;
+      const tipoEmoji = isVerm ? '🔴' : '🔵';
+      const tipoNome  = isVerm ? 'Vermelha' : 'Azul';
+      const mesmodia  = fmtData(e.inicio) === fmtData(e.fim);
+      const fimStr    = mesmodia
         ? fmtHora(e.fim)
-        : `${DIAS[new Date(e.fim).getDay()]} ${fmtHora(e.fim)}`;
-      texto += `${tipo} ${dataAbrev(e.inicio)} · ${fmtHora(e.inicio)}→${horaFim} · ${fmtHoras(r.mins)}`;
-      if (qtd > 1) texto += ` · ${qtd} PMs`;
-      texto += ` · ${fmtMoeda(r.valorCentavos * qtd)}\n`;
+        : `${fmtHora(e.fim)} (${DIAS[new Date(e.fim).getDay()]}, ${String(new Date(e.fim).getDate()).padStart(2, '0')}/${String(new Date(e.fim).getMonth() + 1).padStart(2, '0')})`;
+
+      if (lista.length > 1) {
+        texto += `*${i + 1}. Escala ${tipoNome} ${tipoEmoji}*\n`;
+      } else {
+        texto += `*Escala ${tipoNome} ${tipoEmoji}*\n`;
+      }
+
+      texto += `📅 ${dataCompleta(e.inicio)}\n`;
+      texto += `🕐 ${fmtHora(e.inicio)} → ${fimStr}\n`;
+
+      if (r.minNoturno > 0 && r.minDiurno > 0) {
+        texto += `⏱ ${fmtHoras(r.mins)}  |  Diurno: ${fmtHorasCheias(r.minDiurno)}  /  Noturno: ${fmtHorasCheias(r.minNoturno)}\n`;
+      } else {
+        texto += `⏱ ${fmtHoras(r.mins)} (${r.minNoturno > 0 ? 'Noturno' : 'Diurno'})\n`;
+      }
+
+      const unidStr = e.descricao && e.descricao !== 'Escala AC4' ? e.descricao : '—';
+      const oriStr  = (e.origem || 'AC4').replace('CONVENIO_', 'Conv. ').replace('FAZENDARIO_SEC_ECON', 'Fazendário/Sec.Econ.');
+      texto += `📍 Unidade: ${unidStr}  |  Origem: ${oriStr}\n`;
+
+      if (qtd > 1) {
+        texto += `👮 ${qtd} PMs  ·  ${fmtMoeda(r.valorCentavos)}/PM\n`;
+        texto += `💰 *${fmtMoeda(r.valorCentavos * qtd)}* (total ${qtd} PMs)\n`;
+      } else {
+        texto += `💰 *${fmtMoeda(r.valorCentavos)}*\n`;
+      }
+
+      if (i < resultados.length - 1) texto += `\n${SEP}\n\n`;
     });
 
     if (lista.length > 1) {
-      texto += `\n*${lista.length} escalas · ${fmtHoras(totMins)} · ${fmtMoeda(totValor)}*\n`;
+      texto += `\n${SEP}\n`;
+      texto += `📊 *TOTAL — ${lista.length} escalas*\n`;
+      texto += `⏱ ${fmtHoras(totMins)}  |  💰 *${fmtMoeda(totValor)}*\n`;
+      texto += `${SEP}\n`;
     }
 
-    texto += '\n_Valor simulado · AC4 PMGO_';
+    texto += `\n⚠️ _Portaria SSP n.º 621/2026 · Valor simulado_\n`;
+    texto += `_Sujeito à conferência administrativa — AC4 PMGO_`;
     return texto;
   }
 
@@ -621,9 +653,34 @@
           </td>
         </tr>`;
     });
+    if (lista.length > 1) {
+      html += `
+        <tfoot>
+          <tr class="table-total-row">
+            <td colspan="5">Total geral (${lista.length} escalas)</td>
+            <td>${fmtHoras(totMins)}</td>
+            <td class="value-cell">${fmtMoeda(totValor)}</td>
+            <td></td>
+          </tr>
+        </tfoot>`;
+    }
     html += '</tbody></table></div>';
     container.innerHTML = html;
-    $('printDate').textContent = new Date().toLocaleString('pt-BR');
+
+    const now = new Date();
+    $('printDate').textContent = now.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const sumEl = $('printSummary');
+    if (sumEl) {
+      const periodoStr = filtroMes ? `Período: <strong>${fmtMesRef(filtroMes)}</strong>` : '';
+      sumEl.innerHTML = [
+        `<span><strong>${lista.length}</strong> escala${lista.length === 1 ? '' : 's'}</span>`,
+        `<span>Horas totais: <strong>${fmtHoras(totMins)}</strong></span>`,
+        `<span>Diurnas: <strong>${fmtHorasCheias(totDiurno)}</strong></span>`,
+        `<span>Noturnas: <strong>${fmtHorasCheias(totNoturno)}</strong></span>`,
+        `<span>Valor estimado: <strong>${fmtMoeda(totValor)}</strong></span>`,
+        periodoStr ? `<span>${periodoStr}</span>` : '',
+      ].filter(Boolean).join('');
+    }
   }
 
   /* ------------------------------------------------------- exportações */
