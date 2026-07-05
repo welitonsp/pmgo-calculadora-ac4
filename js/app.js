@@ -783,5 +783,11 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    init();
+    const ano = new Date().getFullYear();
+    document.querySelectorAll('.footer-year').forEach((el) => { el.textContent = ano; });
+    const printYear = $('printYear');
+    if (printYear) printYear.textContent = ano;
+  });
 })();
