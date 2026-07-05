@@ -7,6 +7,13 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // Liga um evento apenas se o elemento existir — evita que uma página em
+  // cache (HTML antigo + JS novo, ou o inverso) derrube toda a inicialização.
+  const on = (id, evt, fn) => {
+    const el = $(id);
+    if (el) el.addEventListener(evt, fn);
+  };
+
   const STORAGE = {
     escalas: 'pmgoEscalas',
     config: 'pmgoConfig',
@@ -51,7 +58,9 @@
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   const parseMoedaCampo = (id) => {
-    const raw = String($(id).value || '').trim().replace(',', '.');
+    // fallback aos valores oficiais caso o campo não exista na página em cache
+    const campo = $(id);
+    const raw = String((campo ? campo.value : VALORES_OFICIAIS[id]) || '').trim().replace(',', '.');
     if (!raw) return NaN;
     const valor = Number(raw);
     return Number.isFinite(valor) && valor >= 0 ? Math.round(valor * 100) : NaN;
@@ -78,7 +87,8 @@
     const tabela = lerTabelaAtual();
     let ok = true;
     const marca = (id, invalido) => {
-      $(id).closest('.field, .tariff-item').classList.toggle('invalid', invalido);
+      const item = $(id) && $(id).closest('.field, .tariff-item');
+      if (item) item.classList.toggle('invalid', invalido);
       if (invalido) ok = false;
     };
     Object.entries({ valAD: 'AD', valAN: 'AN', valVD: 'VD', valVN: 'VN' })
@@ -102,16 +112,17 @@
   }
 
   function salvarConfig() {
+    const val = (id) => ($(id) ? $(id).value : VALORES_OFICIAIS[id]);
     const config = {
-      ad: $('valAD').value, an: $('valAN').value,
-      vd: $('valVD').value, vn: $('valVN').value,
+      ad: val('valAD'), an: val('valAN'),
+      vd: val('valVD'), vn: val('valVN'),
     };
     localStorage.setItem(STORAGE.config, JSON.stringify(config));
     render();
   }
 
   function carregar() {
-    Object.entries(VALORES_OFICIAIS).forEach(([id, valor]) => { $(id).value = valor; });
+    Object.entries(VALORES_OFICIAIS).forEach(([id, valor]) => { if ($(id)) $(id).value = valor; });
     salvarConfig();
     try {
       const e = JSON.parse(localStorage.getItem(STORAGE.escalas) || '[]');
@@ -123,8 +134,8 @@
   function aplicarTema(tema) {
     document.documentElement.dataset.theme = tema;
     localStorage.setItem(STORAGE.theme, tema);
-    $('icon-sun').classList.toggle('hidden', tema !== 'dark');
-    $('icon-moon').classList.toggle('hidden', tema === 'dark');
+    if ($('icon-sun')) $('icon-sun').classList.toggle('hidden', tema !== 'dark');
+    if ($('icon-moon')) $('icon-moon').classList.toggle('hidden', tema === 'dark');
   }
 
   function initTema() {
@@ -209,7 +220,8 @@
         !confirm(`A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`)) {
       ok = false;
     }
-    const descricao = $('escalaDescricao').value.trim() || 'Escala AC4';
+    const campoDesc = $('escalaDescricao');
+    const descricao = (campoDesc && campoDesc.value.trim()) || 'Escala AC4';
     return ok ? { inicio, fim, descricao } : null;
   }
 
@@ -226,7 +238,7 @@
       toast('Escala atualizada.');
     } else {
       escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
-      $('escalaDescricao').value = '';
+      if ($('escalaDescricao')) $('escalaDescricao').value = '';
       toast('Escala adicionada.');
     }
     salvar();
@@ -239,7 +251,9 @@
     editandoId = id;
     $('escalaInicio').value = e.inicio;
     $('escalaFim').value = e.fim;
-    $('escalaDescricao').value = e.descricao === 'Escala AC4' ? '' : (e.descricao || '');
+    if ($('escalaDescricao')) {
+      $('escalaDescricao').value = e.descricao === 'Escala AC4' ? '' : (e.descricao || '');
+    }
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
     $('formTitle').lastChild.textContent = 'Editar escala';
@@ -249,7 +263,7 @@
 
   function cancelarEdicao() {
     editandoId = null;
-    $('escalaDescricao').value = '';
+    if ($('escalaDescricao')) $('escalaDescricao').value = '';
     $('btnSubmit').textContent = 'Adicionar escala';
     $('btnCancelEdit').classList.add('hidden');
     $('formTitle').lastChild.textContent = 'Lançar escala';
@@ -483,33 +497,28 @@
     $('escalaFim').value = toInputLocal(new Date(agora.getTime() + 8 * 3600000));
 
     // eventos
-    $('formEscala').addEventListener('submit', (ev) => { ev.preventDefault(); submeterFormulario(); });
-    $('btnCancelEdit').addEventListener('click', cancelarEdicao);
-    $('btnTheme').addEventListener('click', () =>
+    on('formEscala', 'submit', (ev) => { ev.preventDefault(); submeterFormulario(); });
+    on('btnCancelEdit', 'click', cancelarEdicao);
+    on('btnTheme', 'click', () =>
       aplicarTema(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
-    $('btnPrint').addEventListener('click', () => window.print());
-    $('btnExportIcs').addEventListener('click', exportarICS);
-    $('btnExportCsv').addEventListener('click', exportarCSV);
-    $('btnClearAll').addEventListener('click', limparTudo);
-    $('mobileAdd').addEventListener('click', () => {
-      document.querySelector('.launch-panel').scrollIntoView({ behavior: 'smooth' });
+    on('btnPrint', 'click', () => window.print());
+    on('btnExportIcs', 'click', exportarICS);
+    on('btnExportCsv', 'click', exportarCSV);
+    on('btnClearAll', 'click', limparTudo);
+    on('mobileAdd', 'click', () => {
+      const painel = document.querySelector('.launch-panel');
+      if (painel) painel.scrollIntoView({ behavior: 'smooth' });
       $('escalaInicio').focus();
     });
 
     // início automático do término: +8h quando o início muda
-    $('escalaInicio').addEventListener('change', () => {
+    on('escalaInicio', 'change', () => {
       const v = $('escalaInicio').value;
       if (v) $('escalaFim').value = toInputLocal(new Date(new Date(v).getTime() + 8 * 3600000));
     });
 
-    ['valAD', 'valAN', 'valVD', 'valVN'].forEach((id) =>
-      $(id).addEventListener('input', () => {
-        $(id).closest('.field, .tariff-item').classList.remove('invalid');
-        salvarConfig();
-      }));
-
     // ações delegadas da lista
-    $('listaEscalas').addEventListener('click', (ev) => {
+    on('listaEscalas', 'click', (ev) => {
       const btn = ev.target.closest('[data-acao]');
       if (!btn) return;
       const id = parseFloat(btn.dataset.id);
@@ -522,7 +531,7 @@
 
     // PWA
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
     }
   }
 
