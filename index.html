@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=24">
+  <link rel="stylesheet" href="css/styles.css?v=25">
   <script>
     (function () {
       try {
@@ -104,18 +104,6 @@
       </div>
     </div>
   </header>
-
-  <!-- Cabeçalho do relatório impresso -->
-  <div class="print-only print-header">
-    <div class="print-header-main">
-      <div>
-        <h1>Relatório de Escalas de Serviço Extra — AC4 / PMGO</h1>
-        <p>Emitido em <span id="printDate"></span></p>
-      </div>
-      <p class="print-portaria">Portaria SSP n.º 621/2026</p>
-    </div>
-    <div id="printSummary" class="print-summary"></div>
-  </div>
 
   <main class="layout">
     <section class="metrics" role="status" aria-live="polite">
@@ -287,12 +275,6 @@
       Sujeitos à validação e conferência administrativa.
     </div>
 
-    <footer class="print-only print-footer">
-      Documento de simulação de cálculo AC4 gerado pela Calculadora AC4
-      &mdash; desenvolvido por Weliton Pinheiro &copy; <span id="printYear"></span>.<br>
-      Valor simulado, sem efeito financeiro oficial, sujeito a validação administrativa,
-      conferência do efetivo cumprimento da escala e normativas vigentes da SSP.
-    </footer>
   </main>
 
   <!-- Rodapé de copyright -->
@@ -302,7 +284,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v24 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v25 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -428,7 +410,38 @@
     </div>
   </dialog>
 
-  <script src="js/app.js?v=24"></script>
+  <script src="js/app.js?v=25"></script>
+
+  <!-- Relatório profissional de impressão — populado pelo JS antes de window.print() -->
+  <section id="printReport">
+    <header class="pr-header">
+      <div class="pr-header-left">
+        <h1>Relatório de Escalas AC4</h1>
+        <p class="pr-subtitle">Simulação para conferência administrativa</p>
+      </div>
+      <div class="pr-header-right">
+        <p>Emitido em: <strong id="prDate"></strong></p>
+        <p>Base normativa: Portaria SSP n.º 621/2026</p>
+        <p>Finalidade: Simulação sem efeito financeiro oficial</p>
+      </div>
+    </header>
+
+    <div class="pr-section">
+      <h2 class="pr-section-title">Resumo Geral</h2>
+      <div id="prSummary" class="pr-summary-grid"></div>
+    </div>
+
+    <div class="pr-section">
+      <h2 class="pr-section-title">Escalas Lançadas</h2>
+      <div id="prTableWrap"></div>
+    </div>
+
+    <footer class="pr-footer">
+      <p>Atenção: os valores apresentados são simulados, não possuem efeito financeiro oficial
+      e estão sujeitos à validação administrativa, conferência do efetivo cumprimento da escala
+      e normas vigentes.</p>
+    </footer>
+  </section>
 
   <!-- Cloudflare Web Analytics -->
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3b1137c9d2024604bff681a3d09a202e"}'></script>

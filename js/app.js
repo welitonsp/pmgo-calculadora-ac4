@@ -667,23 +667,99 @@
     html += '</tbody></table></div>';
     container.innerHTML = html;
 
-    const now = new Date();
-    $('printDate').textContent = now.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const sumEl = $('printSummary');
-    if (sumEl) {
-      const periodoStr = filtroMes ? `Período: <strong>${fmtMesRef(filtroMes)}</strong>` : '';
-      sumEl.innerHTML = [
-        `<span><strong>${lista.length}</strong> escala${lista.length === 1 ? '' : 's'}</span>`,
-        `<span>Horas totais: <strong>${fmtHoras(totMins)}</strong></span>`,
-        `<span>Diurnas: <strong>${fmtHorasCheias(totDiurno)}</strong></span>`,
-        `<span>Noturnas: <strong>${fmtHorasCheias(totNoturno)}</strong></span>`,
-        `<span>Valor estimado: <strong>${fmtMoeda(totValor)}</strong></span>`,
-        periodoStr ? `<span>${periodoStr}</span>` : '',
-      ].filter(Boolean).join('');
-    }
   }
 
   /* ------------------------------------------------------- exportações */
+
+  /* Mapa de origem → rótulo legível */
+  function labelOrigem(v) {
+    return {
+      AC4: 'AC4', AGETOP: 'AGETOP', DETRAN: 'DETRAN', PREFEITURAS: 'Prefeituras',
+      GOINFRA: 'GOINFRA', FREAP: 'FREAP', CONVENIO_ENEM: 'Conv. ENEM',
+      CONVENIO_TRE: 'Conv. TRE', CONVENIO_UEG: 'Conv. UEG',
+      CONVENIO_SEDUC: 'Conv. SEDUC', CONVENIO_SAMU: 'Conv. SAMU',
+      CONVENIO_AGR: 'Conv. AGR', FAZENDARIO_SEC_ECON: 'Faz./Sec. Econ.', GEAI: 'GEAI',
+    }[v] || v || 'AC4';
+  }
+
+  /* Popula #printReport e chama window.print() */
+  function imprimirRelatorio() {
+    const lista = escalasOrdenadas();
+    if (!lista.length) { toast('Adicione escalas antes de imprimir.', { erro: true }); return; }
+
+    const resultados = lista.map((e) => ({ e, r: calcularEscala(e) }));
+    const totMins    = resultados.reduce((s, x) => s + x.r.mins, 0);
+    const totDiurno  = resultados.reduce((s, x) => s + x.r.minDiurno, 0);
+    const totNoturno = resultados.reduce((s, x) => s + x.r.minNoturno, 0);
+    const totValor   = resultados.reduce((s, x) => s + x.r.valorCentavos * (x.e.qtdPm || 1), 0);
+
+    const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    $('prDate').textContent = new Date().toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+
+    $('prSummary').innerHTML = [
+      `<div><span class="pr-label">Escalas:</span> <strong>${lista.length}</strong></div>`,
+      `<div><span class="pr-label">Horas totais:</span> <strong>${fmtHoras(totMins)}</strong></div>`,
+      `<div><span class="pr-label">H. diurnas:</span> <strong>${fmtHorasCheias(totDiurno)}</strong></div>`,
+      `<div><span class="pr-label">H. noturnas:</span> <strong>${fmtHorasCheias(totNoturno)}</strong></div>`,
+      `<div><span class="pr-label">Valor estimado:</span> <strong>${fmtMoeda(totValor)}</strong></div>`,
+    ].join('');
+
+    let rows = '';
+    resultados.forEach(({ e, r }, i) => {
+      const qtd      = e.qtdPm || 1;
+      const valor    = r.valorCentavos * qtd;
+      const mesmodia = fmtData(e.inicio) === fmtData(e.fim);
+      const fimStr   = mesmodia ? fmtHora(e.fim) : `${fmtData(e.fim)} ${fmtHora(e.fim)}`;
+      const unidade  = e.descricao && e.descricao !== 'Escala AC4' ? escapeHTML(e.descricao) : '—';
+      const origem   = escapeHTML(labelOrigem(e.origem));
+      const valorCell = qtd > 1
+        ? `${fmtMoeda(valor)}<small>${fmtMoeda(r.valorCentavos)}/PM</small>`
+        : fmtMoeda(valor);
+      rows += `
+        <tr>
+          <td class="pr-num">${i + 1}</td>
+          <td class="pr-center">${DIAS[new Date(e.inicio).getDay()]}</td>
+          <td>${fmtData(e.inicio)}</td>
+          <td class="pr-center">${fmtHora(e.inicio)}</td>
+          <td>${fimStr}</td>
+          <td class="pr-center">${fmtHoras(r.mins)}</td>
+          <td>${unidade}</td>
+          <td>${origem}</td>
+          <td class="pr-center">${fmtHorasCheias(r.minDiurno)}</td>
+          <td class="pr-center">${fmtHorasCheias(r.minNoturno)}</td>
+          <td class="pr-valor">${valorCell}</td>
+        </tr>`;
+    });
+
+    const totalRow = lista.length > 1 ? `
+      <tfoot>
+        <tr class="pr-total-row">
+          <td colspan="8">TOTAL GERAL</td>
+          <td class="pr-center">${fmtHorasCheias(totDiurno)}</td>
+          <td class="pr-center">${fmtHorasCheias(totNoturno)}</td>
+          <td class="pr-valor">${fmtMoeda(totValor)}</td>
+        </tr>
+      </tfoot>` : '';
+
+    $('prTableWrap').innerHTML = `
+      <table class="pr-table">
+        <thead>
+          <tr>
+            <th>N.º</th><th>Dia</th><th>Data</th><th>Início</th>
+            <th>Término</th><th>Duração</th><th>Unidade</th>
+            <th>Origem Remunerado</th><th>H. Diurnas</th>
+            <th>H. Noturnas</th><th>Valor Estimado</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${totalRow}
+      </table>`;
+
+    window.print();
+  }
 
   /* Botão principal da topbar — pergunta ao usuário e abre o Google Calendar */
   async function abrirAgendaGoogle() {
@@ -907,7 +983,7 @@
 
     on('btnTheme', 'click', () =>
       aplicarTema(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
-    on('btnPrint',     'click', () => window.print());
+    on('btnPrint',     'click', imprimirRelatorio);
     on('btnExportIcs', 'click', abrirAgendaGoogle);
     on('btnExportCsv', 'click', exportarCSV);
     on('btnShare',     'click', abrirShareSheet);
@@ -933,7 +1009,7 @@
     });
     on('shareIcsOpt', 'click', () => { $('dialogShare')?.close(); exportarICS(); });
     on('shareCsvOpt', 'click', () => { $('dialogShare')?.close(); exportarCSV(); });
-    on('sharePdfOpt', 'click', () => { $('dialogShare')?.close(); window.print(); });
+    on('sharePdfOpt', 'click', () => { $('dialogShare')?.close(); imprimirRelatorio(); });
     on('shareClose',  'click', () => $('dialogShare')?.close());
 
     on('btnClearAll', 'click', limparTudo);

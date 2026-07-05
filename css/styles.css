@@ -867,6 +867,7 @@ textarea.control { min-height: 74px; resize: vertical; }
 
 /* ===== PRINT ===== */
 .print-only { display: none; }
+#printReport { display: none; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1180px) {
@@ -972,126 +973,95 @@ textarea.control { min-height: 74px; resize: vertical; }
 
 /* ===== PRINT STYLES ===== */
 @media print {
-  @page { size: A4 portrait; margin: 12mm; }
-
-  *, *::before, *::after {
-    box-sizing: border-box !important;
-    max-width: 100%;
-    transform: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
+  @page { size: A4 portrait; margin: 10mm; }
 
   html, body {
-    width: auto; min-width: 0; min-height: 0;
-    overflow: visible !important;
-    background: #fff !important;
-    color: #111 !important;
+    background: #fff !important; color: #000 !important;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 9.5pt;
-    line-height: 1.35;
+    font-size: 10pt; line-height: 1.4;
+    margin: 0; padding: 0; width: 100%;
   }
 
-  .topbar, .pwa-banner, .tariff-strip, .mobile-bar, .toast-region,
-  .site-footer, .feed-tools, .escala-actions, .btn, .btn-icon,
-  button, input, select, textarea { display: none !important; }
+  /* Ocultar toda a interface; exibir apenas o relatório de impressão */
+  body > * { display: none !important; }
+  #printReport { display: block !important; width: 100%; max-width: 100%; }
 
-  .layout, .feed, .table-wrap, .metrics, .metric-card, .legal-alert,
-  .print-header, .print-footer { position: static !important; }
-
-  .layout { display: block; width: 100%; max-width: 100%; padding: 0; margin: 0; overflow: visible !important; }
-
-  .print-only { display: block; }
-  .print-header {
-    display: block; padding-bottom: 12px; margin-bottom: 12px;
-    border-bottom: 1.5px solid #111;
-    break-inside: avoid; page-break-inside: avoid;
-  }
-  .print-header-main {
+  /* --- Cabeçalho --- */
+  .pr-header {
     display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 8px;
+    border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 12px;
+    break-inside: avoid;
   }
-  .print-header h1 { color: #111 !important; font-size: 14pt; line-height: 1.2; }
-  .print-header p { color: #444 !important; font-size: 8pt; margin-top: 3px; }
-  .print-portaria {
-    font-size: 8pt; color: #555 !important; text-align: right;
-    border: 1px solid #aaa; padding: 4px 8px; white-space: nowrap;
-  }
-  .print-summary {
-    display: flex; flex-wrap: wrap; gap: 0;
-    border: 1px solid #bbb; background: #f8f8f8 !important;
-    font-size: 7.8pt; color: #222 !important;
-  }
-  .print-summary span {
-    padding: 5px 10px; border-right: 1px solid #bbb;
-  }
-  .print-summary span:last-child { border-right: none; }
+  .pr-header h1 { font-size: 13pt; font-weight: bold; color: #000 !important; margin: 0 0 3px; }
+  .pr-subtitle { font-size: 8.5pt; color: #555 !important; margin: 0; }
+  .pr-header-right { text-align: right; font-size: 8pt; color: #444 !important; line-height: 1.7; }
+  .pr-header-right p { margin: 0; }
 
-  .metrics {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px; margin-bottom: 12px;
-    break-inside: avoid; page-break-inside: avoid;
+  /* --- Seções --- */
+  .pr-section { margin-bottom: 12px; }
+  .pr-section-title {
+    font-size: 8.5pt; font-weight: bold; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #333 !important;
+    margin: 0 0 5px; padding-bottom: 3px;
+    border-bottom: 1px solid #aaa; break-after: avoid;
   }
-  .metric-card {
-    min-height: 0; border: 1px solid #bbb; border-radius: 0;
-    background: #fff !important; padding: 7px;
-    align-items: flex-start; gap: 0;
-    break-inside: avoid; page-break-inside: avoid;
-  }
-  .metric-card::before { display: none; }
-  .metric-icon { display: none; }
-  .metric-value { color: #111 !important; font-size: 12pt; margin-top: 4px; overflow-wrap: anywhere; }
-  .metric-label, .metric-sub { color: #444 !important; overflow-wrap: anywhere; }
-  .metric-label { font-size: 6.8pt; letter-spacing: 0; }
-  .metric-sub { font-size: 7.2pt; margin-top: 2px; }
 
-  .feed { border: 0; margin-top: 0; overflow: visible !important; }
-  .feed-header { padding: 0 0 8px; border-bottom: 1px solid #999; }
-  .feed-header h2 { font-size: 11pt; }
-  .table-wrap { width: 100%; overflow: visible !important; }
-
-  .escala-table {
-    display: table; width: 100%; min-width: 0;
-    table-layout: fixed; border-collapse: collapse; font-size: 7.7pt;
+  /* --- Resumo --- */
+  .pr-summary-grid { display: flex; border: 1px solid #ccc; break-inside: avoid; }
+  .pr-summary-grid div {
+    flex: 1; padding: 5px 8px; border-right: 1px solid #ccc;
+    font-size: 8pt; color: #000 !important;
   }
-  .escala-table thead { display: table-header-group; }
-  .escala-table tbody { display: table-row-group; }
-  .escala-table tr { display: table-row; }
-  .escala-table th, .escala-table td {
-    display: table-cell; padding: 5px;
-    border: 1px solid #d0d0d0; color: #111 !important;
+  .pr-summary-grid div:last-child { border-right: none; }
+  .pr-label { color: #555 !important; }
+
+  /* --- Tabela principal --- */
+  .pr-table {
+    width: 100%; border-collapse: collapse;
+    table-layout: fixed; font-size: 8pt; break-inside: auto;
+  }
+  .pr-table th, .pr-table td {
+    border: 1px solid #ccc; padding: 4px 5px;
     vertical-align: top; overflow-wrap: anywhere; word-break: break-word;
+    color: #000 !important; background: #fff !important;
   }
-  .escala-table th { background: #f1f3f5 !important; color: #222 !important; font-size: 7pt; letter-spacing: 0; }
-  .escala-table th:nth-child(8), .escala-table td:nth-child(8) { display: none; }
-  .escala-table th:nth-child(1) { width:  6%; }
-  .escala-table th:nth-child(2) { width: 20%; }
-  .escala-table th:nth-child(3) { width:  7%; }
-  .escala-table th:nth-child(4) { width: 13%; }
-  .escala-table th:nth-child(5) { width: 30%; }
-  .escala-table th:nth-child(6) { width:  8%; }
-  .escala-table th:nth-child(7) { width: 16%; }
-  .escala-table tr { break-inside: avoid; page-break-inside: avoid; }
-  .table-total-row td {
-    background: #f1f3f5 !important; font-weight: 700;
-    border-top: 1.5px solid #888 !important; color: #111 !important;
+  .pr-table th {
+    background: #f0f0f0 !important; font-weight: bold;
+    font-size: 7.5pt; text-align: center;
   }
-  .escala-table td::before { display: none; }
-  .table-note { color: #555 !important; font-size: 7pt; }
-  .chips { gap: 3px; }
-  .chip { border: 1px solid #999; background: none !important; color: #111 !important; padding: 1px 4px; white-space: normal; overflow-wrap: anywhere; }
+  .pr-table thead { display: table-header-group; }
+  .pr-table tbody tr { break-inside: avoid; page-break-inside: avoid; }
 
-  .legal-alert {
-    display: block; margin: 12px 0 0; padding: 8px;
-    border: 1px solid #999; border-radius: 0;
-    background: #fff !important; color: #111 !important;
-    font-size: 8pt; break-inside: avoid; page-break-inside: avoid;
+  /* Larguras calibradas para A4 — soma = 100% */
+  .pr-table th:nth-child(1)  { width:  3%; } /* N.º              */
+  .pr-table th:nth-child(2)  { width:  4%; } /* Dia              */
+  .pr-table th:nth-child(3)  { width: 10%; } /* Data             */
+  .pr-table th:nth-child(4)  { width:  6%; } /* Início           */
+  .pr-table th:nth-child(5)  { width: 14%; } /* Término          */
+  .pr-table th:nth-child(6)  { width:  5%; } /* Duração          */
+  .pr-table th:nth-child(7)  { width: 14%; } /* Unidade          */
+  .pr-table th:nth-child(8)  { width: 13%; } /* Origem Remun.    */
+  .pr-table th:nth-child(9)  { width:  7%; } /* H. Diurnas       */
+  .pr-table th:nth-child(10) { width:  7%; } /* H. Noturnas      */
+  .pr-table th:nth-child(11) { width: 17%; } /* Valor Estimado   */
+
+  .pr-num    { text-align: center; }
+  .pr-center { text-align: center; }
+  .pr-valor  { text-align: right; font-weight: 600; }
+  .pr-valor small { font-weight: 400; display: block; font-size: 6.5pt; color: #555 !important; }
+
+  /* Linha de total */
+  .pr-total-row td {
+    background: #f0f0f0 !important; font-weight: bold;
+    border-top: 2px solid #777 !important; color: #000 !important;
   }
-  .print-footer {
-    margin-top: 12px; padding-top: 8px; border-top: 1px solid #999;
-    color: #444 !important; font-size: 7.5pt; text-align: center;
-    overflow-wrap: anywhere; break-inside: avoid; page-break-inside: avoid;
+
+  /* --- Rodapé --- */
+  .pr-footer {
+    margin-top: 14px; padding-top: 8px; border-top: 1px solid #aaa;
+    font-size: 7.5pt; color: #555 !important; break-inside: avoid;
   }
+  .pr-footer p { margin: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
