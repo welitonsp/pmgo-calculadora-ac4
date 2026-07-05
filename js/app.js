@@ -49,10 +49,61 @@
   const fmtHora = (iso) =>
     new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  const toInputLocal = (date) => {
-    const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    return d.toISOString().slice(0, 16);
+  const dataLocalValida = (date) =>
+    date instanceof Date && Number.isFinite(date.getTime());
+
+  function combinarDataHoraLocal(data, hora) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data || '') || !/^\d{2}:\d{2}$/.test(hora || '')) return null;
+    const [ano, mes, dia] = data.split('-').map(Number);
+    const [h, min] = hora.split(':').map(Number);
+    const d = new Date(ano, mes - 1, dia, h, min, 0, 0);
+    return dataLocalValida(d) &&
+      d.getFullYear() === ano &&
+      d.getMonth() === mes - 1 &&
+      d.getDate() === dia &&
+      d.getHours() === h &&
+      d.getMinutes() === min
+      ? d
+      : null;
+  }
+
+  function parseDateTimeLocal(valor) {
+    if (!valor) return null;
+    const [data, horaComSegundos = ''] = String(valor).split('T');
+    const hora = horaComSegundos.slice(0, 5);
+    return combinarDataHoraLocal(data, hora);
+  }
+
+  const formatarDataHoraInput = (date) =>
+    dataLocalValida(date)
+      ? [
+          date.getFullYear(),
+          String(date.getMonth() + 1).padStart(2, '0'),
+          String(date.getDate()).padStart(2, '0'),
+        ].join('-') + `T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+      : '';
+
+  const toInputLocal = formatarDataHoraInput;
+
+  const adicionarHoras = (date, horas) =>
+    dataLocalValida(date) && Number.isFinite(Number(horas))
+      ? new Date(date.getTime() + Number(horas) * 3600000)
+      : null;
+
+  const calcularTerminoPorDuracao = (inicioValor, horas) => {
+    const inicio = parseDateTimeLocal(inicioValor);
+    const fim = adicionarHoras(inicio, horas);
+    return fim ? formatarDataHoraInput(fim) : '';
   };
+
+  function validarIntervaloEscala(inicioValor, fimValor) {
+    const inicio = parseDateTimeLocal(inicioValor);
+    const fim = parseDateTimeLocal(fimValor);
+    if (!inicioValor || !inicio) return { ok: false, campo: 'inicio', mensagem: 'Informe a data e hora de início da escala.' };
+    if (!fimValor || !fim) return { ok: false, campo: 'fim', mensagem: 'Informe a data e hora de término da escala.' };
+    if (fim <= inicio) return { ok: false, campo: 'fim', mensagem: 'O término da escala deve ser posterior ao início.' };
+    return { ok: true, inicio, fim, mensagem: '' };
+  }
 
   const toInputMonth = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -110,8 +161,8 @@
   }
 
   const escalaAgendaValida = (e) => {
-    const i = new Date(e.inicio), f = new Date(e.fim);
-    return Number.isFinite(i.getTime()) && Number.isFinite(f.getTime()) && f > i;
+    const i = parseDateTimeLocal(e.inicio), f = parseDateTimeLocal(e.fim);
+    return dataLocalValida(i) && dataLocalValida(f) && f > i;
   };
 
   function montarICS(lista) {
@@ -265,8 +316,8 @@
      - Vermelha: dia de INÍCIO é sex/sáb/dom.
      - Noturno: [22:00, 05:00) minuto a minuto. */
   function calcularEscala(e) {
-    const ini = new Date(e.inicio);
-    const fim = new Date(e.fim);
+    const ini = parseDateTimeLocal(e.inicio) || new Date(e.inicio);
+    const fim = parseDateTimeLocal(e.fim) || new Date(e.fim);
     const mins = Math.max(1, Math.round((fim - ini) / 60000));
     const cont = { AD: 0, AN: 0, VD: 0, VN: 0 };
     const tabela = tabelaParaCalculo();
@@ -291,8 +342,8 @@
   }
 
   function escalasOrdenadas() {
-    let lista = [...escalas].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
-    if (filtroMes) lista = lista.filter((e) => toInputMonth(new Date(e.inicio)) === filtroMes);
+    let lista = [...escalas].sort((a, b) => (parseDateTimeLocal(a.inicio) || new Date(a.inicio)) - (parseDateTimeLocal(b.inicio) || new Date(b.inicio)));
+    if (filtroMes) lista = lista.filter((e) => toInputMonth(parseDateTimeLocal(e.inicio) || new Date(e.inicio)) === filtroMes);
     return lista;
   }
 
@@ -315,6 +366,72 @@
     return resultados.every((r) => r.ok) ? 'TODOS OS CASOS OK' : resultados;
   };
 
+  window.__ac4TestesLancamento = function () {
+    const resultados = [];
+    const add = (caso, ok, detalhes = '') => resultados.push({ caso, ok: Boolean(ok), detalhes });
+    const idsCampos = ['escalaInicio', 'escalaFim', 'escalaDuracao', 'escalaQtdPm', 'escalaDescricao', 'escalaOrigem'];
+    const snapshot = {
+      escalas: JSON.parse(JSON.stringify(escalas)),
+      filtroMes,
+      local: localStorage.getItem(STORAGE.escalas),
+      session: sessionStorage.getItem(STORAGE.escalas),
+      campos: Object.fromEntries(idsCampos.map((id) => [id, $(id)?.value ?? ''])),
+    };
+
+    try {
+      const inicio12 = formatarDataHoraInput(combinarDataHoraLocal('2026-07-05', '08:00'));
+      const fim12 = calcularTerminoPorDuracao(inicio12, 12);
+      const inicio14 = formatarDataHoraInput(combinarDataHoraLocal('2026-07-10', '18:00'));
+      const fim14 = calcularTerminoPorDuracao(inicio14, 14);
+      const inicio24 = formatarDataHoraInput(combinarDataHoraLocal('2026-07-05', '08:00'));
+      const fim24 = calcularTerminoPorDuracao(inicio24, 24);
+
+      add('Combinar data + hora inicial', inicio12 === '2026-07-05T08:00', inicio12);
+      add('Calcular término de 12h', fim12 === '2026-07-05T20:00', fim12);
+      add('Calcular término de 14h com virada de dia', fim14 === '2026-07-11T08:00', fim14);
+      add('Calcular término de 24h com virada de dia', fim24 === '2026-07-06T08:00', fim24);
+      add('Aceitar término maior que início', validarIntervaloEscala(inicio24, fim24).ok);
+      add('Rejeitar término igual ao início', !validarIntervaloEscala(inicio24, inicio24).ok);
+      add('Rejeitar término anterior ao início', !validarIntervaloEscala(fim24, inicio24).ok);
+
+      const escalaTeste = {
+        id: 'teste-lancamento-ac4',
+        inicio: inicio24,
+        fim: fim24,
+        descricao: 'Escala AC4',
+        origem: 'AC4',
+        qtdPm: 1,
+        tabela: lerTabelaAtual(),
+      };
+      add('Simular criação de objeto de escala', escalaTeste.inicio === '2026-07-05T08:00' && escalaTeste.fim === '2026-07-06T08:00' && escalaTeste.origem === 'AC4');
+
+      escalas = [];
+      filtroMes = '';
+      escalas.push(escalaTeste);
+      salvar();
+      const gravadas = JSON.parse(localStorage.getItem(STORAGE.escalas) || '[]');
+      add('Adicionar escala válida ao estado', escalas.length === 1 && escalas[0].id === escalaTeste.id);
+      add('Storage grava e recupera escalas', gravadas.length === 1 && gravadas[0].fim === '2026-07-06T08:00');
+
+      render();
+      const linhas = document.querySelectorAll('#listaEscalas tbody tr').length;
+      add('Renderizar lista/tabela após adicionar escala', linhas === 1, `${linhas} linha(s)`);
+      add('Totais recalculados após adicionar escala', $('totHoras')?.textContent === '24h' && $('totValor')?.textContent !== 'R$ 0,00', `${$('totHoras')?.textContent} / ${$('totValor')?.textContent}`);
+    } finally {
+      escalas = snapshot.escalas;
+      filtroMes = snapshot.filtroMes;
+      if (snapshot.local === null) localStorage.removeItem(STORAGE.escalas);
+      else localStorage.setItem(STORAGE.escalas, snapshot.local);
+      if (snapshot.session === null) sessionStorage.removeItem(STORAGE.escalas);
+      else sessionStorage.setItem(STORAGE.escalas, snapshot.session);
+      Object.entries(snapshot.campos).forEach(([id, valor]) => { if ($(id)) $(id).value = valor; });
+      render();
+    }
+
+    if (console.table) console.table(resultados);
+    return resultados.every((r) => r.ok) ? 'TODOS OS TESTES DE LANCAMENTO OK' : resultados;
+  };
+
   /* --------------------------------------------------------------- ações */
   function lerQtdPm() {
     const val = parseInt($('escalaQtdPm')?.value || '1', 10);
@@ -324,6 +441,7 @@
   function validarFormulario() {
     const inicio = $('escalaInicio').value;
     const fim    = $('escalaFim').value;
+    const intervalo = validarIntervaloEscala(inicio, fim);
     let ok = true;
 
     const marca = (fieldId, invalido) => {
@@ -332,9 +450,13 @@
       if (ctrl) ctrl.setAttribute('aria-invalid', invalido ? 'true' : 'false');
       if (invalido) ok = false;
     };
-    marca('fieldInicio', !inicio);
-    marca('fieldFim', !fim || (inicio && new Date(fim) <= new Date(inicio)));
-    if (!ok) return null;
+    marca('fieldInicio', !intervalo.ok && intervalo.campo === 'inicio');
+    marca('fieldFim', !intervalo.ok && intervalo.campo === 'fim');
+
+    if (!ok) {
+      toast(intervalo.mensagem || 'Confira os campos obrigatórios da escala.', { erro: true });
+      return null;
+    }
 
     const campoDesc = $('escalaDescricao');
     const descricao = (campoDesc && campoDesc.value.trim()) || 'Escala AC4';
@@ -347,7 +469,7 @@
     const dados = validarFormulario();
     if (!dados) return;
 
-    const duracaoHoras = (new Date(dados.fim) - new Date(dados.inicio)) / 3600000;
+    const duracaoHoras = (parseDateTimeLocal(dados.fim) - parseDateTimeLocal(dados.inicio)) / 3600000;
     if (duracaoHoras > 24) {
       const ok = await dialogConfirmar(
         `A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`,
@@ -415,8 +537,8 @@
     escalas.push({
       ...e,
       id: Date.now() + Math.random(),
-      inicio: toInputLocal(new Date(new Date(e.inicio).getTime() + umDia)),
-      fim:    toInputLocal(new Date(new Date(e.fim).getTime() + umDia)),
+      inicio: toInputLocal(new Date((parseDateTimeLocal(e.inicio) || new Date(e.inicio)).getTime() + umDia)),
+      fim:    toInputLocal(new Date((parseDateTimeLocal(e.fim) || new Date(e.fim)).getTime() + umDia)),
     });
     haptic([10, 30, 10]);
     salvar(); render();
@@ -597,7 +719,7 @@
           <h3>Nenhuma escala lançada</h3>
           <p>${escapeHTML(msg)}</p>
         </div>`;
-      $('printDate').textContent = new Date().toLocaleString('pt-BR');
+      if ($('printDate')) $('printDate').textContent = new Date().toLocaleString('pt-BR');
       return;
     }
 
@@ -624,7 +746,8 @@
       tipoChips.push(`<span class="chip chip-origem">${escapeHTML(origemLabel)}</span>`);
 
       const fimStr = fmtData(e.inicio) === fmtData(e.fim) ? fmtHora(e.fim) : `${fmtData(e.fim)} ${fmtHora(e.fim)}`;
-      const unidadeNota = e.descricao && e.descricao !== 'Escala AC4' ? `<span class="table-note">${escapeHTML(e.descricao)}</span>` : '';
+      const unidadeTexto = e.descricao && e.descricao !== 'Escala AC4' ? e.descricao : '-';
+      const unidadeNota = `<span class="table-note">Unidade: ${escapeHTML(unidadeTexto)}</span>`;
 
       html += `
         <tr>
@@ -1017,14 +1140,21 @@
 
     const aplicarDuracao = () => {
       const horas = Number($('escalaDuracao')?.value || 0);
-      const ini   = $('escalaInicio').value;
-      if (!horas || !ini) return;
-      $('escalaFim').value = toInputLocal(new Date(new Date(ini).getTime() + horas * 3600000));
+      if (!horas) return false;
+      const fim = calcularTerminoPorDuracao($('escalaInicio')?.value || '', horas);
+      if (!fim) return false;
+      $('escalaFim').value = fim;
       $('fieldFim').classList.remove('invalid');
+      $('fieldFim').querySelector('.control')?.removeAttribute('aria-invalid');
+      return true;
     };
+    on('escalaDuracao', 'input', aplicarDuracao);
     on('escalaDuracao', 'change', aplicarDuracao);
+    on('escalaInicio',  'input', aplicarDuracao);
     on('escalaInicio',  'change', aplicarDuracao);
-    on('escalaFim', 'input', () => { if ($('escalaDuracao')) $('escalaDuracao').value = ''; });
+    const marcarDuracaoPersonalizada = () => { if ($('escalaDuracao')) $('escalaDuracao').value = ''; };
+    on('escalaFim', 'input', marcarDuracaoPersonalizada);
+    on('escalaFim', 'change', marcarDuracaoPersonalizada);
 
     on('listaEscalas', 'click', (ev) => {
       const btn = ev.target.closest('[data-acao]');
