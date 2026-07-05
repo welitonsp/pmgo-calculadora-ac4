@@ -16,8 +16,6 @@
   /* ------------------------------------------------------------ estado */
   let escalas = [];          // { id, inicio, fim, descricao, tabela }
   let editandoId = null;     // id da escala em edição (null = criando)
-  let filtroMes = 'todos';   // 'todos' | 'YYYY-MM'
-  let termoBusca = '';
   let ultimaExcluida = null; // para desfazer
   const PORTARIA_ATUAL = 'Portaria SSP nº 621/2026';
   const VALORES_OFICIAIS = { valAD: '30', valAN: '33', valVD: '40', valVN: '45' };
@@ -190,26 +188,8 @@
     };
   }
 
-  const escalasFiltradas = () => {
-    const porMes = filtroMes === 'todos'
-      ? escalas
-      : escalas.filter((e) => e.inicio.slice(0, 7) === filtroMes);
-    const termo = termoBusca.trim().toLocaleLowerCase('pt-BR');
-    const filtradas = termo
-      ? porMes.filter((e) => {
-          const r = calcularEscala(e);
-          const tipo = [
-            r.minVermelha > 0 ? 'vermelha' : '',
-            r.minVermelha < r.mins ? 'azul' : '',
-            r.minNoturno > 0 ? 'noturno' : 'diurno',
-          ].join(' ');
-          return `${e.descricao} ${tipo} ${e.inicio} ${e.fim}`
-            .toLocaleLowerCase('pt-BR')
-            .includes(termo);
-        })
-      : porMes;
-    return [...filtradas].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
-  };
+  const escalasOrdenadas = () =>
+    [...escalas].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
 
   /* --------------------------------------------------------------- ações */
   function validarFormulario() {
@@ -229,7 +209,8 @@
         !confirm(`A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`)) {
       ok = false;
     }
-    return ok ? { inicio, fim } : null;
+    const descricao = $('escalaDescricao').value.trim() || 'Escala AC4';
+    return ok ? { inicio, fim, descricao } : null;
   }
 
   function submeterFormulario() {
@@ -244,7 +225,8 @@
       cancelarEdicao();
       toast('Escala atualizada.');
     } else {
-      escalas.push({ id: Date.now() + Math.random(), descricao: 'Escala AC4', ...dados, tabela: tabelaAtual });
+      escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
+      $('escalaDescricao').value = '';
       toast('Escala adicionada.');
     }
     salvar();
@@ -257,6 +239,7 @@
     editandoId = id;
     $('escalaInicio').value = e.inicio;
     $('escalaFim').value = e.fim;
+    $('escalaDescricao').value = e.descricao === 'Escala AC4' ? '' : (e.descricao || '');
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
     $('formTitle').lastChild.textContent = 'Editar escala';
@@ -266,6 +249,7 @@
 
   function cancelarEdicao() {
     editandoId = null;
+    $('escalaDescricao').value = '';
     $('btnSubmit').textContent = 'Adicionar escala';
     $('btnCancelEdit').classList.add('hidden');
     $('formTitle').lastChild.textContent = 'Lançar escala';
@@ -324,7 +308,7 @@
 
   /* ----------------------------------------------------------- render */
   function render() {
-    const lista = escalasFiltradas();
+    const lista = escalasOrdenadas();
     const resultados = lista.map((e) => ({ e, r: calcularEscala(e) }));
 
     // métricas
@@ -342,9 +326,6 @@
     $('totValor').textContent = fmtMoeda(totValor);
     $('mobileTotal').textContent = fmtMoeda(totValor);
 
-    // seletor de mês
-    renderFiltroMes();
-
     // botões dependentes de dados
     const temDados = lista.length > 0;
     $('btnClearAll').classList.toggle('hidden', escalas.length === 0);
@@ -357,12 +338,8 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>
           </svg>
-          <h3>${termoBusca ? 'Nenhuma escala encontrada' : filtroMes === 'todos' ? 'Nenhuma escala lançada' : 'Nenhuma escala neste mês'}</h3>
-          <p>${termoBusca
-            ? 'Ajuste a busca no cabeçalho para localizar outras escalas.'
-            : filtroMes === 'todos'
-              ? 'Preencha o formulário acima para iniciar o cálculo.'
-              : 'Escolha outro mês no filtro acima.'}</p>
+          <h3>Nenhuma escala lançada</h3>
+          <p>Preencha o formulário acima para iniciar o cálculo.</p>
         </div>`;
       $('printDate').textContent = new Date().toLocaleString('pt-BR');
       return;
@@ -428,24 +405,9 @@
     $('printDate').textContent = new Date().toLocaleString('pt-BR');
   }
 
-  function renderFiltroMes() {
-    const sel = $('filtroMes');
-    const meses = [...new Set(escalas.map((e) => e.inicio.slice(0, 7)))].sort();
-    const atual = filtroMes;
-    sel.innerHTML = '<option value="todos">Todos os meses</option>' +
-      meses.map((m) => {
-        const [ano, mes] = m.split('-');
-        const nome = new Date(+ano, +mes - 1, 1)
-          .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        return `<option value="${m}">${nome[0].toUpperCase() + nome.slice(1)}</option>`;
-      }).join('');
-    sel.value = meses.includes(atual) ? atual : 'todos';
-    filtroMes = sel.value;
-  }
-
   /* ------------------------------------------------------- exportações */
   function exportarICS() {
-    const lista = escalasFiltradas();
+    const lista = escalasOrdenadas();
     if (!lista.length) {
       toast('Adicione escalas antes de gerar o arquivo .ics.', { erro: true });
       return;
@@ -471,7 +433,7 @@
   }
 
   function exportarCSV() {
-    const lista = escalasFiltradas();
+    const lista = escalasOrdenadas();
     if (!lista.length) {
       toast('Adicione escalas antes de exportar CSV.', { erro: true });
       return;
@@ -529,8 +491,6 @@
     $('btnExportIcs').addEventListener('click', exportarICS);
     $('btnExportCsv').addEventListener('click', exportarCSV);
     $('btnClearAll').addEventListener('click', limparTudo);
-    $('filtroMes').addEventListener('change', (ev) => { filtroMes = ev.target.value; render(); });
-    $('buscaEscala').addEventListener('input', (ev) => { termoBusca = ev.target.value; render(); });
     $('mobileAdd').addEventListener('click', () => {
       document.querySelector('.launch-panel').scrollIntoView({ behavior: 'smooth' });
       $('escalaInicio').focus();
