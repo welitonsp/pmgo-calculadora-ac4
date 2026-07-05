@@ -28,8 +28,8 @@
   const VALORES_OFICIAIS = { valAD: '30', valAN: '33', valVD: '40', valVN: '45' };
 
   /* -------------------------------------------------------- utilitários */
-  const fmtMoeda = (cent) =>
-    (cent / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const moedaBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtMoeda = (cent) => moedaBRL.format(cent / 100);
 
   const fmtHoras = (mins) => {
     const h = Math.floor(mins / 60);
@@ -182,7 +182,8 @@
 
   /* ------------------------------------------------------------- cálculo
      Regras (Portaria SSP): minuto a minuto.
-     - Noturno: 22:00 até 05:00.
+     - Noturno: [22:00, 05:00) — o minuto das 05:00 já é diurno,
+       sem lacuna nem sobreposição na fronteira.
      - Vermelha: sexta, sábado e domingo.  */
   function calcularEscala(e) {
     const ini = new Date(e.inicio);
@@ -195,14 +196,17 @@
       const m = new Date(ini.getTime() + i * 60000);
       const dia = m.getDay();
       const tempoDia = m.getHours() * 60 + m.getMinutes();
-      const noturno = tempoDia >= 22 * 60 || tempoDia <= 5 * 60;
+      const noturno = tempoDia >= 22 * 60 || tempoDia < 5 * 60;
       const vermelha = dia === 5 || dia === 6 || dia === 0;
       cont[vermelha ? (noturno ? 'VN' : 'VD') : (noturno ? 'AN' : 'AD')]++;
     }
 
-    const valorCentavos = Math.round(
-      Object.keys(cont).reduce((s, k) => s + (cont[k] * tabela.valores[k]) / 60, 0)
-    );
+    // Dinheiro só em centavos inteiros: soma (minutos × centavos/hora)
+    // em inteiros e divide por 60 uma única vez ao final. Para horas
+    // cheias o resultado é exato, sem resíduo de ponto flutuante.
+    const centavosMinuto = Object.keys(cont)
+      .reduce((s, k) => s + cont[k] * tabela.valores[k], 0);
+    const valorCentavos = Math.round(centavosMinuto / 60);
     return {
       mins,
       minDiurno: cont.AD + cont.VD,
@@ -215,6 +219,36 @@
 
   const escalasOrdenadas = () =>
     [...escalas].sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+
+  /* -------------------------------------------- testes de regressão
+     Execute no console do navegador: __ac4Testes()
+     Valida o cálculo contra os valores oficiais da Portaria 621/2026. */
+  window.__ac4Testes = function () {
+    const casos = [
+      { caso: 'A sex 18h→sáb 8h (14h)', inicio: '2026-07-03T18:00', fim: '2026-07-04T08:00',
+        mins: 840, diurno: 420, noturno: 420, centavos: 59500 },
+      { caso: 'B sáb 8h→dom 8h (24h)', inicio: '2026-07-04T08:00', fim: '2026-07-05T08:00',
+        mins: 1440, diurno: 1020, noturno: 420, centavos: 99500 },
+      { caso: 'C seg 8h→18h (10h azul dia)', inicio: '2026-07-06T08:00', fim: '2026-07-06T18:00',
+        mins: 600, diurno: 600, noturno: 0, centavos: 30000 },
+      { caso: 'D seg 22h→ter 5h (7h azul noite)', inicio: '2026-07-06T22:00', fim: '2026-07-07T05:00',
+        mins: 420, diurno: 0, noturno: 420, centavos: 23100 },
+      { caso: 'E sáb 22h→dom 5h (7h verm. noite)', inicio: '2026-07-11T22:00', fim: '2026-07-12T05:00',
+        mins: 420, diurno: 0, noturno: 420, centavos: 31500 },
+    ];
+    const resultados = casos.map((c) => {
+      const r = calcularEscala({ inicio: c.inicio, fim: c.fim });
+      const ok = r.mins === c.mins && r.minDiurno === c.diurno &&
+        r.minNoturno === c.noturno && r.valorCentavos === c.centavos;
+      return {
+        caso: c.caso, ok,
+        esperado: fmtMoeda(c.centavos), obtido: fmtMoeda(r.valorCentavos),
+        diurno: `${r.minDiurno / 60}h`, noturno: `${r.minNoturno / 60}h`,
+      };
+    });
+    if (console.table) console.table(resultados);
+    return resultados.every((r) => r.ok) ? 'TODOS OS CASOS OK' : resultados;
+  };
 
   /* --------------------------------------------------------------- ações */
   function validarFormulario() {

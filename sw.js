@@ -1,12 +1,12 @@
 /* Service Worker — Calculadora AC4 PMGO
    Estratégia: network-first para o app shell (atualizações chegam rápido),
    com fallback ao cache quando offline. */
-const CACHE = 'ac4-pmgo-v10';
+const CACHE = 'ac4-pmgo-v11';
 const SHELL = [
   './',
   './index.html',
-  './css/styles.css?v=10',
-  './js/app.js?v=10',
+  './css/styles.css?v=11',
+  './js/app.js?v=11',
   './manifest.webmanifest',
   './assets/brasao-19crpm.png',
   './assets/icon.svg',
