@@ -585,6 +585,9 @@
           <td data-label="Valor" class="value-cell">${fmtMoeda(valorTotal)}${qtd > 1 ? `<span class="table-note">${fmtMoeda(r.valorCentavos)}/PM</span>` : ''}</td>
           <td data-label="Ações">
             <div class="escala-actions">
+              <button class="btn-icon gcal" data-acao="agenda" data-id="${e.id}" title="Adicionar ao Google Agenda" aria-label="Adicionar ao Google Agenda">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/></svg>
+              </button>
               <button class="btn-icon" data-acao="duplicar" data-id="${e.id}" title="Duplicar para o dia seguinte" aria-label="Duplicar">
                 <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
               </button>
@@ -611,6 +614,45 @@
     if (!arquivo.eventos) { toast('Não há escalas válidas para gerar o arquivo .ics.', { erro: true }); return; }
     baixar(arquivo.conteudo, 'escalas-ac4.ics', 'text/calendar;charset=utf-8');
     toast(`Arquivo gerado. Use "Importar" na Agenda Google.${arquivo.ignoradas ? ` (${arquivo.ignoradas} ignoradas)` : ''}`);
+  }
+
+  /* Monta a URL de link direto para o Google Calendar (1 evento por link).
+     Datas convertidas para UTC via dataICS() — fuso horário tratado corretamente. */
+  function gerarLinkGoogleAgenda(e) {
+    const r = calcularEscala(e);
+    const qtd = e.qtdPm || 1;
+    const tipo = r.minVermelha > 0 ? 'Vermelha' : 'Azul';
+    const linhas = [
+      `Servico Extra AC4 — Escala ${tipo}`,
+      '',
+      `Duracao: ${fmtHoras(r.mins)}`,
+      `Horas diurnas: ${fmtHorasCheias(r.minDiurno)}`,
+      `Horas noturnas: ${fmtHorasCheias(r.minNoturno)}`,
+    ];
+    if (qtd > 1) linhas.push(`Qtd. PM: ${qtd}`);
+    linhas.push('', `Valor estimado: ${fmtMoeda(r.valorCentavos * qtd)}`);
+    if (qtd > 1) linhas.push(`(${fmtMoeda(r.valorCentavos)}/PM)`);
+    linhas.push('', 'Valor simulado — sujeito a validacao administrativa.', 'Calculadora AC4 · PMGO');
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: e.descricao || `Servico Extra AC4 — ${tipo}`,
+      dates: `${dataICS(e.inicio)}/${dataICS(e.fim)}`,
+      details: linhas.join('\n'),
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  }
+
+  async function abrirAgendaGoogleItem(id) {
+    const e = escalas.find((x) => x.id === id);
+    if (!e) return;
+    const ok = await dialogConfirmar(
+      `Deseja salvar a escala "${e.descricao}" no Google Agenda?`,
+      { textoOk: 'Abrir Google Agenda', perigoso: false }
+    );
+    if (!ok) return;
+    haptic(10);
+    window.open(gerarLinkGoogleAgenda(e), '_blank', 'noopener');
   }
 
   function exportarCSV() {
@@ -743,6 +785,16 @@
     on('shareWA',     'click', () => { $('dialogShare')?.close(); compartilharWhatsApp(); });
     on('shareNative', 'click', () => { $('dialogShare')?.close(); compartilharNativo(); });
     on('shareCopy',   'click', () => { $('dialogShare')?.close(); copiarResumo(); });
+    on('shareGoogleOpt', 'click', () => {
+      $('dialogShare')?.close();
+      const lista = escalasOrdenadas();
+      if (!lista.length) { toast('Adicione escalas antes de compartilhar.', { erro: true }); return; }
+      if (lista.length === 1) {
+        abrirAgendaGoogleItem(lista[0].id);
+      } else {
+        toast(`Use o botão 📅 em cada escala para adicionar ao Google Agenda individualmente.`);
+      }
+    });
     on('shareIcsOpt', 'click', () => { $('dialogShare')?.close(); exportarICS(); });
     on('shareCsvOpt', 'click', () => { $('dialogShare')?.close(); exportarCSV(); });
     on('sharePdfOpt', 'click', () => { $('dialogShare')?.close(); window.print(); });
@@ -766,9 +818,10 @@
       const btn = ev.target.closest('[data-acao]');
       if (!btn) return;
       const id = parseFloat(btn.dataset.id);
-      if (btn.dataset.acao === 'remover')   removerEscala(id);
-      else if (btn.dataset.acao === 'editar')   editarEscala(id);
-      else if (btn.dataset.acao === 'duplicar') duplicarEscala(id);
+      if (btn.dataset.acao === 'remover')        removerEscala(id);
+      else if (btn.dataset.acao === 'editar')    editarEscala(id);
+      else if (btn.dataset.acao === 'duplicar')  duplicarEscala(id);
+      else if (btn.dataset.acao === 'agenda')    abrirAgendaGoogleItem(id);
     });
 
     document.addEventListener('keydown', (e) => {

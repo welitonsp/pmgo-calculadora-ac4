@@ -634,6 +634,7 @@ textarea.control { min-height: 74px; resize: vertical; }
 .escala-actions .btn-icon { width: 32px; height: 32px; border-color: transparent; background: transparent; }
 .escala-actions .btn-icon:hover { background: var(--surface-3); }
 .escala-actions .delete:hover { background: var(--danger-soft); color: var(--danger); }
+.escala-actions .gcal:hover  { background: #e8f0fe; color: #1a73e8; }
 
 .empty-state {
   margin: 0;
@@ -819,6 +820,7 @@ textarea.control { min-height: 74px; resize: vertical; }
 .share-icon-ics    { background: #e8f0ff; color: var(--blue-600); }
 .share-icon-csv    { background: #dcfce7; color: var(--green-700); }
 .share-icon-pdf    { background: var(--danger-soft); color: var(--danger); }
+.share-icon-gcal   { background: #e8f0fe; color: #1a73e8; }
 
 /* ===== PRINT ===== */
 .print-only { display: none; }
