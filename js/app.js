@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v24
+   Calculadora AC4 — v26
    ========================================================================== */
 (() => {
   'use strict';
@@ -192,6 +192,21 @@
     });
     linhas.push('END:VCALENDAR');
     return { conteudo: linhas.map(dobrarLinhaICS).join('\r\n'), eventos, ignoradas };
+  }
+
+  function baixarArquivoAgenda(lista, mensagem = 'Arquivo .ics gerado para importar no Google Agenda.') {
+    const arquivo = montarICS(lista);
+    if (!arquivo.eventos) {
+      toast('Não há escalas válidas para gerar o arquivo .ics.', { erro: true });
+      return null;
+    }
+    baixar(arquivo.conteudo, 'escalas-ac4.ics', 'text/calendar;charset=utf-8');
+    const total = `${arquivo.eventos} evento${arquivo.eventos === 1 ? '' : 's'}`;
+    const ignoradas = arquivo.ignoradas
+      ? ` ${arquivo.ignoradas} escala${arquivo.ignoradas === 1 ? '' : 's'} inválida${arquivo.ignoradas === 1 ? '' : 's'} foram ignoradas.`
+      : '';
+    toast(`${mensagem} ${total}.${ignoradas}`);
+    return arquivo;
   }
 
   /* -------------------------------------------- tabela de valores */
@@ -889,25 +904,29 @@
     const lista = escalasOrdenadas();
     if (!lista.length) { toast('Adicione escalas antes de salvar na agenda.', { erro: true }); return; }
 
-    const msg = lista.length === 1
-      ? `Deseja salvar a escala "${lista[0].descricao}" no Google Agenda?`
-      : `Deseja salvar as ${lista.length} escalas no Google Agenda?`;
+    if (lista.length > 1) {
+      const okMulti = await dialogConfirmar(
+        `Gerar um arquivo .ics com as ${lista.length} escalas para importar no Google Agenda?`,
+        { textoOk: 'Gerar arquivo .ics', perigoso: false }
+      );
+      if (!okMulti) return;
+      haptic(10);
+      baixarArquivoAgenda(lista, 'Arquivo .ics gerado com todas as escalas para o Google Agenda.');
+      return;
+    }
 
-    const ok = await dialogConfirmar(msg, { textoOk: 'Abrir Google Agenda', perigoso: false });
+    const ok = await dialogConfirmar(`Deseja salvar a escala "${lista[0].descricao}" no Google Agenda?`, { textoOk: 'Abrir Google Agenda', perigoso: false });
     if (!ok) return;
 
     haptic(10);
-    lista.forEach((e) => window.open(gerarLinkGoogleAgenda(e), '_blank', 'noopener'));
+    window.open(gerarLinkGoogleAgenda(lista[0]), '_blank', 'noopener');
   }
 
   /* Download .ics para importação manual — acessível pelo share sheet */
   function exportarICS() {
     const lista = escalasOrdenadas();
     if (!lista.length) { toast('Adicione escalas antes de gerar o arquivo .ics.', { erro: true }); return; }
-    const arquivo = montarICS(lista);
-    if (!arquivo.eventos) { toast('Não há escalas válidas para gerar o arquivo .ics.', { erro: true }); return; }
-    baixar(arquivo.conteudo, 'escalas-ac4.ics', 'text/calendar;charset=utf-8');
-    toast(`Arquivo gerado. Use "Importar" na Agenda Google.${arquivo.ignoradas ? ` (${arquivo.ignoradas} ignoradas)` : ''}`);
+    baixarArquivoAgenda(lista, 'Arquivo gerado. Use "Importar" na Agenda Google.');
   }
 
   /* Monta a URL de link direto para o Google Calendar (1 evento por link).
@@ -1034,6 +1053,32 @@
     return resultado;
   };
 
+  window.__ac4TestesAgendamento = function () {
+    const casos = [
+      { id: 'agenda-2027-08-03', inicio: '2027-08-03T18:00', fim: '2027-08-04T08:00', descricao: 'Escala 03/08/2027', origem: 'AC4', qtdPm: 1 },
+      { id: 'agenda-2026-08-05', inicio: '2026-08-05T08:00', fim: '2026-08-06T08:00', descricao: 'Escala 05/08/2026', origem: 'AC4', qtdPm: 1 },
+    ];
+    const arquivo = montarICS(casos);
+    const linhas = desdobrarLinhasICS(arquivo.conteudo);
+    const eventos = linhas.filter((l) => l === 'BEGIN:VEVENT').length;
+    const uids = linhas.filter((l) => l.startsWith('UID:')).map((l) => l.slice(4));
+    const esperado = [
+      `DTSTART:${dataICS(casos[0].inicio)}`,
+      `DTEND:${dataICS(casos[0].fim)}`,
+      `DTSTART:${dataICS(casos[1].inicio)}`,
+      `DTEND:${dataICS(casos[1].fim)}`,
+    ];
+    const resultados = [
+      { caso: 'Gera dois eventos no mesmo arquivo .ics', ok: arquivo.eventos === 2 && eventos === 2 },
+      { caso: 'Inclui as datas da escala de 03/08/2027', ok: linhas.includes(esperado[0]) && linhas.includes(esperado[1]) },
+      { caso: 'Inclui as datas da escala de 05/08/2026', ok: linhas.includes(esperado[2]) && linhas.includes(esperado[3]) },
+      { caso: 'Gera UIDs estáveis e únicos', ok: uids.length === 2 && new Set(uids).size === 2 && uids.every((uid) => uid.endsWith(`@${ICS_DOMAIN}`)) },
+      { caso: 'Validação iCalendar aprova múltiplas escalas', ok: window.__ac4ValidarICS(casos).ok },
+    ];
+    if (console.table) console.table(resultados);
+    return resultados.every((r) => r.ok) ? 'TODOS OS TESTES DE AGENDAMENTO OK' : resultados;
+  };
+
   /* -------------------------------------------- PWA install prompt */
   function initPWA() {
     const jaInstalado = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -1127,7 +1172,7 @@
       if (lista.length === 1) {
         abrirAgendaGoogleItem(lista[0].id);
       } else {
-        toast(`Use o botão 📅 em cada escala para adicionar ao Google Agenda individualmente.`);
+        baixarArquivoAgenda(lista, 'Arquivo .ics gerado com todas as escalas para o Google Agenda.');
       }
     });
     on('shareIcsOpt', 'click', () => { $('dialogShare')?.close(); exportarICS(); });
