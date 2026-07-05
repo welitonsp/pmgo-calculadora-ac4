@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=21">
+  <link rel="stylesheet" href="css/styles.css?v=23">
   <script>
     (function () {
       try {
@@ -209,10 +209,30 @@
                 <p class="field-hint" id="hintQtdPm">Valor multiplicado pelo nº de PMs</p>
               </div>
 
-              <div class="field launch-full" id="fieldDescricao">
-                <label for="escalaDescricao">Descrição <span class="field-optional">(opcional)</span></label>
-                <input type="text" class="control" id="escalaDescricao" maxlength="120"
-                       placeholder="Ex.: Policiamento ostensivo — Evento">
+              <div class="field" id="fieldDescricao">
+                <label for="escalaDescricao">Unidade <span class="field-optional">(opcional)</span></label>
+                <input type="text" class="control" id="escalaDescricao" maxlength="80"
+                       placeholder="Ex.: 1ª CIA, BPChq, RPMon...">
+              </div>
+
+              <div class="field" id="fieldOrigem">
+                <label for="escalaOrigem">Origem</label>
+                <select class="control" id="escalaOrigem">
+                  <option value="AC4">AC4</option>
+                  <option value="AGETOP">AGETOP</option>
+                  <option value="DETRAN">DETRAN</option>
+                  <option value="PREFEITURAS">Prefeituras</option>
+                  <option value="GOINFRA">GOINFRA</option>
+                  <option value="FREAP">FREAP</option>
+                  <option value="CONVENIO_ENEM">Conv. ENEM</option>
+                  <option value="CONVENIO_TRE">Conv. TRE</option>
+                  <option value="CONVENIO_UEG">Conv. UEG</option>
+                  <option value="CONVENIO_SEDUC">Conv. SEDUC</option>
+                  <option value="CONVENIO_SAMU">Conv. SAMU</option>
+                  <option value="CONVENIO_AGR">Conv. AGR</option>
+                  <option value="FAZENDARIO_SEC_ECON">Fazendário / Sec. Econ.</option>
+                  <option value="GEAI">GEAI</option>
+                </select>
               </div>
 
               <div class="launch-full">
@@ -278,7 +298,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v21 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v23 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -404,7 +424,7 @@
     </div>
   </dialog>
 
-  <script src="js/app.js?v=21"></script>
+  <script src="js/app.js?v=23"></script>
 
   <!-- Cloudflare Web Analytics -->
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3b1137c9d2024604bff681a3d09a202e"}'></script>

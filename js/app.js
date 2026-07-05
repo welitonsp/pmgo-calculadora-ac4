@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v21
+   Calculadora AC4 — v23
    ========================================================================== */
 (() => {
   'use strict';
@@ -124,6 +124,8 @@
       const qtd = e.qtdPm || 1;
       const descricao = [
         'Escala AC4',
+        e.descricao && e.descricao !== 'Escala AC4' ? `Unidade: ${e.descricao}` : '',
+        `Origem: ${e.origem || 'AC4'}`,
         `Início: ${fmtDataHora(e.inicio)}`,
         `Término: ${fmtDataHora(e.fim)}`,
         qtd > 1 ? `PMs: ${qtd}` : '',
@@ -336,8 +338,9 @@
 
     const campoDesc = $('escalaDescricao');
     const descricao = (campoDesc && campoDesc.value.trim()) || 'Escala AC4';
+    const origem = $('escalaOrigem')?.value || 'AC4';
     const qtdPm = lerQtdPm();
-    return { inicio, fim, descricao, qtdPm };
+    return { inicio, fim, descricao, origem, qtdPm };
   }
 
   async function submeterFormulario() {
@@ -367,6 +370,7 @@
       escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
       if ($('escalaDescricao')) $('escalaDescricao').value = '';
       if ($('escalaQtdPm'))    $('escalaQtdPm').value = '1';
+      if ($('escalaOrigem'))   $('escalaOrigem').value = 'AC4';
       toast('Escala adicionada.');
     }
     salvar();
@@ -380,8 +384,9 @@
     $('escalaInicio').value = e.inicio;
     $('escalaFim').value   = e.fim;
     if ($('escalaDuracao')) $('escalaDuracao').value = '';
-    if ($('escalaQtdPm'))   $('escalaQtdPm').value = e.qtdPm || 1;
+    if ($('escalaQtdPm'))    $('escalaQtdPm').value = e.qtdPm || 1;
     if ($('escalaDescricao')) $('escalaDescricao').value = e.descricao === 'Escala AC4' ? '' : (e.descricao || '');
+    if ($('escalaOrigem'))   $('escalaOrigem').value = e.origem || 'AC4';
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
     $('formTitle').lastChild.textContent = ' Editar escala';
@@ -393,6 +398,7 @@
     editandoId = null;
     if ($('escalaDescricao')) $('escalaDescricao').value = '';
     if ($('escalaQtdPm'))    $('escalaQtdPm').value = '1';
+    if ($('escalaOrigem'))   $('escalaOrigem').value = 'AC4';
     $('btnSubmit').textContent = 'Adicionar escala';
     $('btnCancelEdit').classList.add('hidden');
     $('formTitle').lastChild.textContent = ' Lançar escala';
@@ -582,13 +588,16 @@
         ? `<span class="chip chip-night">${fmtHorasCheias(r.minNoturno)} noturno</span>`
         : '<span class="chip chip-day">Diurno</span>');
       if (qtd > 1) tipoChips.push(`<span class="chip chip-neutral">${qtd} PMs</span>`);
+      const origemLabel = (e.origem || 'AC4').replace('CONVENIO_', 'Conv. ').replace('FAZENDARIO_SEC_ECON', 'Fazendário');
+      tipoChips.push(`<span class="chip chip-origem">${escapeHTML(origemLabel)}</span>`);
 
       const fimStr = fmtData(e.inicio) === fmtData(e.fim) ? fmtHora(e.fim) : `${fmtData(e.fim)} ${fmtHora(e.fim)}`;
+      const unidadeNota = e.descricao && e.descricao !== 'Escala AC4' ? `<span class="table-note">${escapeHTML(e.descricao)}</span>` : '';
 
       html += `
         <tr>
           <td data-label="Dia">${fmtDiaSemana(e.inicio)}</td>
-          <td data-label="Data">${fmtData(e.inicio)}<span class="table-note">${escapeHTML(e.descricao)}</span></td>
+          <td data-label="Data">${fmtData(e.inicio)}${unidadeNota}</td>
           <td data-label="Início">${fmtHora(e.inicio)}</td>
           <td data-label="Término">${fimStr}</td>
           <td data-label="Tipo"><div class="chips">${tipoChips.join('')}</div></td>
@@ -654,10 +663,13 @@
     const linhas = [
       `Servico Extra AC4 — Escala ${tipo}`,
       '',
+      e.descricao && e.descricao !== 'Escala AC4' ? `Unidade: ${e.descricao}` : null,
+      `Origem: ${e.origem || 'AC4'}`,
+      '',
       `Duracao: ${fmtHoras(r.mins)}`,
       `Horas diurnas: ${fmtHorasCheias(r.minDiurno)}`,
       `Horas noturnas: ${fmtHorasCheias(r.minNoturno)}`,
-    ];
+    ].filter((l) => l !== null);
     if (qtd > 1) linhas.push(`Qtd. PM: ${qtd}`);
     linhas.push('', `Valor estimado: ${fmtMoeda(r.valorCentavos * qtd)}`);
     if (qtd > 1) linhas.push(`(${fmtMoeda(r.valorCentavos)}/PM)`);
@@ -689,7 +701,7 @@
     if (!lista.length) { toast('Adicione escalas antes de exportar CSV.', { erro: true }); return; }
     const sep = ';';
     const num = (cent) => (cent / 100).toFixed(2).replace('.', ',');
-    const linhas = [['Descrição', 'Início', 'Término', 'Qtd. PM', 'Horas', 'H. diurnas', 'H. noturnas', 'Portaria', 'Valor/PM (R$)', 'Valor total (R$)'].join(sep)];
+    const linhas = [['Unidade', 'Origem', 'Início', 'Término', 'Qtd. PM', 'Horas', 'H. diurnas', 'H. noturnas', 'Portaria', 'Valor/PM (R$)', 'Valor total (R$)'].join(sep)];
     let total = 0;
     lista.forEach((e) => {
       const r = calcularEscala(e);
@@ -698,6 +710,7 @@
       total += valorTotal;
       linhas.push([
         `"${e.descricao.replace(/"/g, '""')}"`,
+        `"${(e.origem || 'AC4').replace(/"/g, '""')}"`,
         fmtDataHora(e.inicio), fmtDataHora(e.fim),
         qtd,
         (r.mins / 60).toFixed(2).replace('.', ','),
@@ -708,7 +721,7 @@
         num(valorTotal),
       ].join(sep));
     });
-    linhas.push(['TOTAL', '', '', '', '', '', '', '', '', num(total)].join(sep));
+    linhas.push(['TOTAL', '', '', '', '', '', '', '', '', '', num(total)].join(sep));
     baixar('﻿' + linhas.join('\r\n'), 'escalas-ac4.csv', 'text/csv;charset=utf-8');
     toast('Planilha CSV gerada.');
   }

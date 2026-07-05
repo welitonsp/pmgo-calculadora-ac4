@@ -668,6 +668,7 @@ textarea.control { min-height: 74px; resize: vertical; }
 .chip-night   { background: var(--info-soft); color: var(--info-text); }
 .chip-day     { background: var(--surface-3); color: var(--text-muted); }
 .chip-neutral { background: var(--surface-3); color: var(--text-muted); border: 1px solid var(--border); }
+.chip-origem  { background: color-mix(in srgb, var(--gold-500) 14%, var(--surface-3)); color: var(--warn-text); border: 1px solid color-mix(in srgb, var(--gold-500) 30%, var(--border)); }
 
 .escala-actions { display: flex; gap: 4px; justify-content: flex-end; }
 .escala-actions .btn-icon { width: 32px; height: 32px; border-color: transparent; background: transparent; }
