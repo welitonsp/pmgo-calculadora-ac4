@@ -14,9 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=13">
+  <link rel="stylesheet" href="css/styles.css?v=14">
   <script>
-    // Aplica o tema salvo antes da primeira pintura para evitar flash
     (function () {
       try {
         var t = localStorage.getItem('pmgoTheme') ||
@@ -28,24 +27,45 @@
 </head>
 <body>
 
+  <!-- Banner PWA -->
+  <div class="pwa-banner hidden" id="pwaBanner" role="banner" aria-label="Instalar aplicativo">
+    <div class="pwa-banner-content">
+      <img src="assets/icon.svg" alt="" width="32" height="32" class="pwa-banner-icon">
+      <div>
+        <strong>Instale o Calculadora AC4</strong>
+        <p>Acesse offline, direto da tela inicial</p>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button class="btn btn-primary btn-sm" id="pwaBannerInstall">Instalar</button>
+      <button class="btn-icon pwa-banner-close" id="pwaBannerClose" aria-label="Fechar banner">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-badge" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <img src="assets/brasao-19crpm.png" alt="" class="brand-brasao"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="display:none">
             <rect x="4" y="3" width="16" height="18" rx="2"/>
             <path d="M8 7h8M8 11h8M8 15h3M14 15h2"/>
           </svg>
         </div>
         <div class="brand-text">
           <h1>Calculadora AC4</h1>
-          <p>Apoio de cálculo AC4</p>
+          <p>Apoio de cálculo AC4 · PMGO</p>
         </div>
       </div>
       <div class="topbar-actions">
         <div class="agenda-action">
-          <button class="btn btn-primary btn-sm" id="btnExportIcs" title="Baixa um arquivo .ics com todas as escalas para importar na Agenda Google">
+          <button class="btn btn-primary btn-sm" id="btnExportIcs" title="Baixa um arquivo .ics para importar na Agenda Google" aria-label="Exportar escalas para Google Agenda">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 12v6M9 15h6"/>
             </svg>
@@ -54,18 +74,25 @@
           <p>Gere o arquivo .ics e importe manualmente na sua Google Agenda.</p>
         </div>
         <div class="topbar-secondary">
-          <button class="btn btn-outline btn-sm" id="btnExportCsv">
+          <button class="btn btn-outline btn-sm" id="btnExportCsv" aria-label="Exportar planilha CSV">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
             </svg>
-            <span>Exportar CSV</span>
+            <span>CSV</span>
           </button>
-          <button class="btn btn-outline btn-sm" id="btnPrint">
+          <button class="btn btn-outline btn-sm" id="btnPrint" aria-label="Salvar relatório em PDF">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
               <rect x="6" y="14" width="12" height="8"/>
             </svg>
-            <span>Salvar PDF</span>
+            <span>PDF</span>
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnShare" aria-label="Compartilhar relatório">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
+            </svg>
+            <span>Compartilhar</span>
           </button>
           <button class="btn-icon" id="btnTheme" title="Alternar tema" aria-label="Alternar tema claro/escuro">
             <svg id="icon-moon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -80,16 +107,72 @@
     </div>
   </header>
 
+  <!-- Painel de identificação do policial -->
+  <details class="officer-details" id="officerDetails">
+    <summary class="officer-summary">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      <span>Identificação do policial</span>
+      <span class="officer-preview" id="officerPreview"></span>
+      <svg class="icon icon-sm chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    </summary>
+    <div class="officer-body">
+      <div class="officer-grid">
+        <div class="field">
+          <label for="officerNome">Nome completo</label>
+          <input type="text" class="control" id="officerNome" placeholder="Ex.: João da Silva" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="officerPosto">Posto / Graduação</label>
+          <input type="text" class="control" id="officerPosto" placeholder="Ex.: Cabo PM" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="officerMatricula">Matrícula</label>
+          <input type="text" class="control" id="officerMatricula" placeholder="Ex.: 12345-6" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="officerUnidade">Unidade / BM</label>
+          <input type="text" class="control" id="officerUnidade" placeholder="Ex.: 19º CRPM" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="officerMes">Mês de referência</label>
+          <input type="month" class="control" id="officerMes">
+        </div>
+      </div>
+      <p class="officer-note">Dados salvos localmente no dispositivo. Aparecem no relatório PDF.</p>
+    </div>
+  </details>
+
   <!-- Cabeçalho do relatório impresso -->
   <div class="print-only print-header">
-    <div>
-      <h1>Relatório de Escalas AC4</h1>
-      <p>Simulação gerada em <span id="printDate"></span></p>
+    <div class="print-header-row">
+      <img src="assets/brasao-19crpm.png" alt="Brasão PMGO" class="print-brasao"
+           onerror="this.style.display='none'">
+      <div>
+        <h1>Relatório de Escalas AC4</h1>
+        <p id="printOfficerInfo"></p>
+        <p>Simulação gerada em <span id="printDate"></span></p>
+      </div>
     </div>
   </div>
 
   <main class="layout">
     <section class="metrics" role="status" aria-live="polite">
+      <div class="metric-card highlight">
+        <div class="metric-icon metric-money">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="metric-label">Valor estimado</div>
+          <div class="metric-value" id="totValor">R$ 0,00</div>
+          <div class="metric-sub">Valor bruto simulado</div>
+        </div>
+      </div>
       <div class="metric-card">
         <div class="metric-icon metric-clock">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,18 +209,6 @@
           <div class="metric-sub" id="pctNoturnas">0% do total</div>
         </div>
       </div>
-      <div class="metric-card highlight">
-        <div class="metric-icon metric-money">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </div>
-        <div>
-          <div class="metric-label">Valor estimado</div>
-          <div class="metric-value" id="totValor">R$ 0,00</div>
-          <div class="metric-sub">Valor bruto simulado</div>
-        </div>
-      </div>
     </section>
 
     <section class="operation-grid">
@@ -154,8 +225,8 @@
             <div class="launch-row">
               <div class="field" id="fieldInicio">
                 <label for="escalaInicio">Início</label>
-                <input type="datetime-local" class="control" id="escalaInicio" required>
-                <p class="field-error">Informe a data e hora de início.</p>
+                <input type="datetime-local" class="control" id="escalaInicio" required aria-required="true">
+                <p class="field-error" role="alert">Informe a data e hora de início.</p>
               </div>
               <div class="field" id="fieldDuracao">
                 <label for="escalaDuracao">Duração</label>
@@ -168,11 +239,11 @@
               </div>
               <div class="field" id="fieldFim">
                 <label for="escalaFim">Término</label>
-                <input type="datetime-local" class="control" id="escalaFim" required>
-                <p class="field-error">O término deve ser depois do início.</p>
+                <input type="datetime-local" class="control" id="escalaFim" required aria-required="true">
+                <p class="field-error" role="alert">O término deve ser depois do início.</p>
               </div>
               <div class="field" id="fieldDescricao">
-                <label for="escalaDescricao">Descrição</label>
+                <label for="escalaDescricao">Descrição <span class="field-optional">(opcional)</span></label>
                 <input type="text" class="control" id="escalaDescricao" maxlength="120"
                        placeholder="Ex.: Policiamento ostensivo - Evento">
               </div>
@@ -230,6 +301,9 @@
         <div class="feed-header">
           <h2>Escalas lançadas</h2>
           <div class="feed-tools">
+            <select class="select-compact select-sm" id="filtroMes" aria-label="Filtrar por mês">
+              <option value="">Todos os meses</option>
+            </select>
             <button class="btn btn-danger-soft btn-sm hidden" id="btnClearAll">Limpar tudo</button>
           </div>
         </div>
@@ -254,17 +328,103 @@
       <div class="label">Valor estimado</div>
       <div class="value" id="mobileTotal">R$ 0,00</div>
     </div>
-    <button class="btn btn-primary" id="mobileAdd">
-      <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      Nova escala
-    </button>
+    <div class="mobile-bar-actions">
+      <button class="btn-icon mobile-share-btn" id="mobileShare" title="Compartilhar" aria-label="Compartilhar relatório">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
+        </svg>
+      </button>
+      <button class="btn btn-primary" id="mobileAdd">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nova escala
+      </button>
+    </div>
   </div>
 
   <!-- Toasts -->
-  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
 
-  <script src="js/app.js?v=13"></script>
+  <!-- Dialog de confirmação -->
+  <dialog class="confirm-dialog" id="dialogConfirm" aria-modal="true">
+    <div class="dialog-body">
+      <p class="dialog-msg" id="dialogMsg"></p>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" id="dialogCancel">Cancelar</button>
+        <button class="btn btn-danger-soft" id="dialogOk">Confirmar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Bottom sheet de compartilhamento -->
+  <dialog class="share-dialog" id="dialogShare" aria-modal="true" aria-label="Opções de compartilhamento">
+    <div class="share-sheet">
+      <div class="share-handle" aria-hidden="true"></div>
+      <div class="share-header">
+        <h3 class="share-title">Compartilhar</h3>
+        <button class="btn-icon share-close" id="shareClose" aria-label="Fechar">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="share-grid">
+        <button class="share-opt" id="shareWA">
+          <span class="share-icon share-icon-wa">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+            </svg>
+          </span>
+          <span>WhatsApp</span>
+        </button>
+        <button class="share-opt" id="shareNative" style="display:none">
+          <span class="share-icon share-icon-native">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
+            </svg>
+          </span>
+          <span>Compartilhar</span>
+        </button>
+        <button class="share-opt" id="shareCopy">
+          <span class="share-icon share-icon-copy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+              <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+            </svg>
+          </span>
+          <span>Copiar</span>
+        </button>
+        <button class="share-opt" id="shareIcsOpt">
+          <span class="share-icon share-icon-ics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+              <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 12v6M9 15h6"/>
+            </svg>
+          </span>
+          <span>Agenda</span>
+        </button>
+        <button class="share-opt" id="shareCsvOpt">
+          <span class="share-icon share-icon-csv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h4"/>
+            </svg>
+          </span>
+          <span>CSV</span>
+        </button>
+        <button class="share-opt" id="sharePdfOpt">
+          <span class="share-icon share-icon-pdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+              <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+          </span>
+          <span>PDF</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/app.js?v=14"></script>
 </body>
 </html>
