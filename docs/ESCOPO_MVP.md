@@ -1,4 +1,4 @@
-# Escopo do MVP — Calculadora AC4 19º CRPM
+# Escopo do MVP — Calculadora AC4
 
 ## Objetivo
 
@@ -15,14 +15,14 @@ A ferramenta deve permitir que o policial:
 
 ## Identidade visual
 
-A interface deve utilizar o brasão do **19º Comando Regional da Polícia Militar de Goiás** como elemento institucional principal.
+A interface deve utilizar identidade visual neutra e institucional, sem vínculo visual direto a unidade específica.
 
 Requisito de implementação:
 
-- adicionar o arquivo do brasão em `assets/brasao-19crpm.png` ou `public/brasao-19crpm.png`;
-- exibir o brasão no cabeçalho da calculadora;
-- exibir o brasão no relatório gerado em PDF;
-- manter visual institucional com predominância de verde, dourado e branco.
+- exibir identificação neutra da Calculadora AC4 no cabeçalho;
+- não renderizar brasão específico na interface principal;
+- não renderizar brasão específico no relatório gerado em PDF;
+- manter visual institucional, claro e profissional.
 
 ## Módulo 1 — Calculadora manual
 
@@ -87,7 +87,7 @@ A integração direta com Google Agenda por OAuth deve ficar para fase posterior
 
 O sistema deve gerar relatório com:
 
-- brasão do 19º CRPM;
+- título neutro do relatório;
 - nome do policial;
 - posto/graduação;
 - unidade;
@@ -112,7 +112,7 @@ Na versão inicial, a geração pode ser feita por `window.print()`, permitindo 
 
 ## Critérios de aceite da primeira versão
 
-- O cabeçalho exibe o brasão do 19º CRPM.
+- O cabeçalho exibe identificação neutra da Calculadora AC4.
 - O policial consegue lançar uma escala manual.
 - O sistema calcula horas e valor estimado.
 - O sistema importa eventos de arquivo `.ics`.

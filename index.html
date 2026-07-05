@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Calculadora AC4 · PMGO</title>
-  <meta name="description" content="Calculadora de escalas AC4 da Polícia Militar de Goiás — horas diurnas e noturnas, valor estimado, exportação para agenda e relatório em PDF.">
+  <title>Calculadora AC4</title>
+  <meta name="description" content="Calculadora de escalas AC4 para simulação de horas diurnas, horas noturnas, valor estimado, exportação para agenda e relatório em PDF.">
   <meta name="theme-color" content="#0b1f3a">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=12">
+  <link rel="stylesheet" href="css/styles.css?v=13">
   <script>
     // Aplica o tema salvo antes da primeira pintura para evitar flash
     (function () {
@@ -32,13 +32,15 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-badge">
-          <img src="assets/brasao-19crpm.png" alt="Brasão do 19º CRPM"
-               onerror="var p=this.parentElement; this.remove(); p.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><path d=\'M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z\'/></svg>'">
+        <div class="brand-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="4" y="3" width="16" height="18" rx="2"/>
+            <path d="M8 7h8M8 11h8M8 15h3M14 15h2"/>
+          </svg>
         </div>
         <div class="brand-text">
           <h1>Calculadora AC4</h1>
-          <p>19º CRPM · PMGO</p>
+          <p>Apoio de cálculo AC4</p>
         </div>
       </div>
       <div class="topbar-actions">
@@ -80,9 +82,8 @@
 
   <!-- Cabeçalho do relatório impresso -->
   <div class="print-only print-header">
-    <img src="assets/brasao-19crpm.png" alt="" onerror="this.style.display='none'">
     <div>
-      <h1>Relatório de Escalas AC4 — 19º CRPM / PMGO</h1>
+      <h1>Relatório de Escalas AC4</h1>
       <p>Simulação gerada em <span id="printDate"></span></p>
     </div>
   </div>
@@ -241,9 +242,9 @@
       </div>
 
       <footer class="print-only print-footer">
-        Documento de simulação de cálculo AC4 gerado pela Calculadora AC4 — 19º CRPM/PMGO.
-        O pagamento final está sujeito a validação administrativa, conferência do efetivo
-        cumprimento da escala e às normativas vigentes da SSP.
+        Documento de simulação de cálculo AC4 gerado pela Calculadora AC4.
+        Valor simulado, sem efeito financeiro oficial, sujeito a validação administrativa,
+        conferência do efetivo cumprimento da escala e normativas vigentes da SSP.
       </footer>
   </main>
 
@@ -264,6 +265,6 @@
   <!-- Toasts -->
   <div class="toast-region" id="toastRegion" aria-live="polite"></div>
 
-  <script src="js/app.js?v=12"></script>
+  <script src="js/app.js?v=13"></script>
 </body>
 </html>

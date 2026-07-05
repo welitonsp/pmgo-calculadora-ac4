@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — PMGO
+   Calculadora AC4
    Lógica da aplicação: estado, cálculo, persistência, ICS, UI reativa.
    ========================================================================== */
 (() => {
@@ -66,6 +66,117 @@
   const escapeHTML = (s) =>
     String(s).replace(/[&<>"']/g, (c) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const ICS_DOMAIN = 'calculadora-ac4-pmgo.github.io';
+  const ICS_PRODID = '-//Calculadora AC4//PT-BR';
+  const contarOctetos = (s) => {
+    if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(s).length;
+    return unescape(encodeURIComponent(s)).length;
+  };
+
+  function dobrarLinhaICS(linha) {
+    const partes = [];
+    let atual = '';
+    Array.from(String(linha)).forEach((char) => {
+      const tentativa = atual + char;
+      if (atual && contarOctetos(tentativa) > 75) {
+        partes.push(atual);
+        atual = ` ${char}`;
+      } else {
+        atual = tentativa;
+      }
+    });
+    if (atual || !partes.length) partes.push(atual);
+    return partes.join('\r\n');
+  }
+
+  const escaparTextoICS = (valor) =>
+    String(valor || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\r\n|\r|\n/g, '\\n')
+      .replace(/;/g, '\\;')
+      .replace(/,/g, '\\,');
+
+  function dataICS(valor) {
+    const data = new Date(valor);
+    if (!Number.isFinite(data.getTime())) return '';
+    return data.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+  }
+
+  function hashCurto(valor) {
+    let hash = 0x811c9dc5;
+    Array.from(String(valor)).forEach((char) => {
+      hash ^= char.charCodeAt(0);
+      hash = Math.imul(hash, 0x01000193);
+    });
+    return (hash >>> 0).toString(36);
+  }
+
+  function uidEscalaICS(escala) {
+    const origem = escala.id != null && escala.id !== ''
+      ? String(escala.id)
+      : hashCurto(`${escala.inicio}|${escala.fim}|${escala.descricao || ''}`);
+    const seguro = origem.replace(/[^A-Za-z0-9_-]/g, '-').replace(/-+/g, '-').slice(0, 80);
+    return `ac4-${seguro || hashCurto(origem)}@${ICS_DOMAIN}`;
+  }
+
+  function escalaAgendaValida(escala) {
+    const inicio = new Date(escala.inicio);
+    const fim = new Date(escala.fim);
+    return Number.isFinite(inicio.getTime()) &&
+      Number.isFinite(fim.getTime()) &&
+      fim.getTime() > inicio.getTime();
+  }
+
+  function montarICS(lista) {
+    const dtstamp = dataICS(new Date());
+    const linhas = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      `PRODID:${ICS_PRODID}`,
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+    ];
+    let eventos = 0;
+    let ignoradas = 0;
+
+    lista.forEach((escala) => {
+      if (!escalaAgendaValida(escala)) {
+        ignoradas += 1;
+        return;
+      }
+
+      const resultado = calcularEscala(escala);
+      const descricao = [
+        'Escala AC4',
+        `Início: ${fmtDataHora(escala.inicio)}`,
+        `Término: ${fmtDataHora(escala.fim)}`,
+        `Valor estimado: ${fmtMoeda(resultado.valorCentavos)}`,
+        'Valor simulado, sujeito à conferência administrativa.',
+      ].join('\n');
+
+      linhas.push(
+        'BEGIN:VEVENT',
+        `UID:${uidEscalaICS(escala)}`,
+        `DTSTAMP:${dtstamp}`,
+        `DTSTART:${dataICS(escala.inicio)}`,
+        `DTEND:${dataICS(escala.fim)}`,
+        `SUMMARY:${escaparTextoICS(escala.descricao || 'Escala AC4')}`,
+        `DESCRIPTION:${escaparTextoICS(descricao)}`,
+        'TRANSP:OPAQUE',
+        'STATUS:CONFIRMED',
+        'END:VEVENT'
+      );
+      eventos += 1;
+    });
+
+    linhas.push('END:VCALENDAR');
+    return {
+      conteudo: linhas.map(dobrarLinhaICS).join('\r\n'),
+      eventos,
+      ignoradas,
+    };
+  }
 
   const parseMoedaCampo = (id) => {
     // fallback aos valores oficiais caso o campo não exista na página em cache
@@ -494,25 +605,97 @@
       toast('Adicione escalas antes de gerar o arquivo .ics.', { erro: true });
       return;
     }
-    const fmt = (iso) =>
-      new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const esc = (s) => s.replace(/\\/g, '\\\\').replace(/([,;])/g, '\\$1').replace(/\n/g, '\\n');
-    const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//PMGO//Calculadora AC4//PT-BR'];
-    lista.forEach((e, i) => {
-      linhas.push(
-        'BEGIN:VEVENT',
-        `UID:ac4-${Date.now()}-${i}@pmgo`,
-        `DTSTAMP:${fmt(new Date().toISOString())}`,
-        `DTSTART:${fmt(e.inicio)}`,
-        `DTEND:${fmt(e.fim)}`,
-        `SUMMARY:${esc(e.descricao)}`,
-        'END:VEVENT'
-      );
-    });
-    linhas.push('END:VCALENDAR');
-    baixar(linhas.join('\r\n'), 'escalas-ac4.ics', 'text/calendar');
-    toast('Arquivo gerado. Na Agenda Google, use "Importar" para adicionar as escalas.');
+    const arquivo = montarICS(lista);
+    if (!arquivo.eventos) {
+      toast('Não há escalas válidas para gerar o arquivo .ics.', { erro: true });
+      return;
+    }
+    baixar(arquivo.conteudo, 'escalas-ac4.ics', 'text/calendar;charset=utf-8');
+    const complemento = arquivo.ignoradas
+      ? ` ${arquivo.ignoradas} escala${arquivo.ignoradas === 1 ? '' : 's'} inválida${arquivo.ignoradas === 1 ? '' : 's'} não foram exportadas.`
+      : '';
+    toast(`Arquivo gerado. Na Agenda Google, use "Importar" para adicionar as escalas.${complemento}`);
   }
+
+  function desdobrarLinhasICS(conteudo) {
+    return conteudo.split('\r\n').reduce((acc, linha) => {
+      if (/^[ \t]/.test(linha) && acc.length) {
+        acc[acc.length - 1] += linha.slice(1);
+      } else {
+        acc.push(linha);
+      }
+      return acc;
+    }, []);
+  }
+
+  function parseDataICS(valor) {
+    const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(valor || '');
+    if (!m) return null;
+    const data = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+    return Number.isFinite(data.getTime()) ? data : null;
+  }
+
+  window.__ac4ValidarICS = function (entrada) {
+    const fonte = Array.isArray(entrada) ? entrada : escalasOrdenadas();
+    const arquivo = montarICS(fonte);
+    const falhas = [];
+    const conteudo = arquivo.conteudo;
+
+    if (!conteudo.startsWith('BEGIN:VCALENDAR')) falhas.push('Arquivo não inicia com BEGIN:VCALENDAR.');
+    if (!conteudo.endsWith('END:VCALENDAR')) falhas.push('Arquivo não encerra com END:VCALENDAR.');
+    if (!conteudo.includes('\r\n')) falhas.push('Arquivo não usa quebras de linha CRLF.');
+    if (/[^\r]\n|\r(?!\n)/.test(conteudo)) falhas.push('Arquivo contém quebras de linha fora do padrão CRLF.');
+
+    conteudo.split('\r\n').forEach((linha, index) => {
+      if (contarOctetos(linha) > 75) {
+        falhas.push(`Linha física ${index + 1} excede 75 octetos.`);
+      }
+    });
+
+    const linhas = desdobrarLinhasICS(conteudo);
+    ['VERSION:2.0', `PRODID:${ICS_PRODID}`, 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH']
+      .forEach((item) => {
+        if (!linhas.includes(item)) falhas.push(`Campo obrigatório ausente: ${item}.`);
+      });
+
+    const eventos = [];
+    let atual = null;
+    linhas.forEach((linha) => {
+      if (linha === 'BEGIN:VEVENT') {
+        atual = [];
+      } else if (linha === 'END:VEVENT') {
+        if (atual) eventos.push(atual);
+        atual = null;
+      } else if (atual) {
+        atual.push(linha);
+      }
+    });
+
+    if (arquivo.eventos > 0 && !eventos.length) {
+      falhas.push('Há escalas válidas, mas nenhum VEVENT foi encontrado.');
+    }
+    if (eventos.length !== arquivo.eventos) {
+      falhas.push('Quantidade de VEVENTs não corresponde às escalas válidas.');
+    }
+
+    eventos.forEach((evento, index) => {
+      const obter = (campo) => evento.find((linha) => linha.startsWith(`${campo}:`));
+      ['UID', 'DTSTAMP', 'DTSTART', 'DTEND', 'SUMMARY'].forEach((campo) => {
+        if (!obter(campo)) falhas.push(`VEVENT ${index + 1} sem ${campo}.`);
+      });
+      const inicio = parseDataICS((obter('DTSTART') || '').slice('DTSTART:'.length));
+      const fim = parseDataICS((obter('DTEND') || '').slice('DTEND:'.length));
+      if (!inicio) falhas.push(`VEVENT ${index + 1} possui DTSTART inválido.`);
+      if (!fim) falhas.push(`VEVENT ${index + 1} possui DTEND inválido.`);
+      if (inicio && fim && fim <= inicio) {
+        falhas.push(`VEVENT ${index + 1} possui DTEND menor ou igual ao DTSTART.`);
+      }
+    });
+
+    const resultado = { ok: falhas.length === 0, eventos: eventos.length, ignoradas: arquivo.ignoradas, falhas };
+    if (falhas.length && console.table) console.table(falhas);
+    return resultado;
+  };
 
   function exportarCSV() {
     const lista = escalasOrdenadas();

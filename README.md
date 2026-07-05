@@ -1,10 +1,12 @@
-# Calculadora AC4 - 19º CRPM/PMGO
+# Calculadora AC4
 
 ## Descrição
 
-A Calculadora AC4 é uma aplicação web estática, instalável como PWA, voltada ao apoio no cálculo de escalas AC4 do 19º CRPM/PMGO.
+A Calculadora AC4 é uma aplicação web estática, instalável como PWA, voltada ao apoio no cálculo de escalas AC4.
 
 A ferramenta permite a simulação e a conferência administrativa preliminar de horas e valores a partir dos horários informados pelo usuário. O resultado apresentado é estimativo, não possui efeito financeiro oficial e não substitui conferência administrativa, folha oficial, ordem de serviço, ato administrativo ou validação pela seção competente.
+
+A interface utiliza identidade visual neutra e institucional, sem exibição de brasão específico na tela principal ou nos relatórios gerados.
 
 ## Acesso
 
@@ -21,7 +23,7 @@ Em dispositivos móveis, é possível usar a opção do navegador para adicionar
 - Consolidação de total de horas, quantidade de escalas e valor estimado.
 - Filtro por mês quando houver escalas em períodos diferentes.
 - Edição, duplicação e exclusão de escalas lançadas.
-- Exportação de agenda em `.ics`.
+- Exportação de agenda em `.ics`, compatível com importação manual em aplicativos de agenda, especialmente Google Agenda.
 - Exportação de planilha em `.csv`.
 - Geração de relatório em PDF pela função de impressão do navegador.
 - Tema claro/escuro com persistência da preferência do usuário.
@@ -88,7 +90,7 @@ A aplicação oferece recursos de exportação para apoiar conferência e organi
 
 - `.ics`: arquivo de calendário compatível com aplicações como Google Calendar, Outlook e similares.
 - `.csv`: planilha simples para abertura em Excel, Google Sheets ou ferramentas equivalentes.
-- PDF: relatório gerado pela função de impressão ou salvamento em PDF do navegador.
+- PDF: relatório gerado pela função de impressão ou salvamento em PDF do navegador, com layout otimizado para A4.
 
 As exportações refletem os dados informados e calculados no navegador, mantendo o caráter de simulação e conferência preliminar.
 
@@ -101,6 +103,14 @@ __ac4Testes()
 ```
 
 Essa rotina valida cenários de cálculo por categoria de hora e valor total, incluindo casos de escalas azuis, vermelhas, diurnas, noturnas e escalas que atravessam a virada de dia.
+
+A exportação `.ics` também pode ser validada no console pela função:
+
+```js
+__ac4ValidarICS()
+```
+
+Essa validação confere a estrutura básica iCalendar, campos obrigatórios dos eventos, uso de CRLF, limite de linhas dobradas e ordem entre `DTSTART` e `DTEND`.
 
 ## Aviso institucional
 

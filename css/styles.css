@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 - PMGO / 19 CRPM
+   Calculadora AC4
    UI institucional premium, mobile-first, sem dependencias.
    ========================================================================== */
 
@@ -131,12 +131,7 @@ button { color: inherit; }
   overflow: hidden;
 }
 .topbar::before {
-  content: '';
-  position: absolute;
-  inset: 0 48% 0 24%;
-  background: url('../assets/brasao-19crpm.png') center / contain no-repeat;
-  opacity: 0.055;
-  pointer-events: none;
+  display: none;
 }
 .topbar::after {
   content: '';
@@ -165,17 +160,19 @@ button { color: inherit; }
 
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .brand-badge {
-  width: 76px;
-  height: 76px;
-  border-radius: 16px;
-  background: transparent;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(242, 221, 155, 0.24), rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(242, 221, 155, 0.28);
   display: grid;
   place-items: center;
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
-.brand-badge img { width: 74px; height: 74px; object-fit: contain; }
-.brand-badge svg { width: 25px; height: 25px; color: var(--gold-300); }
+.brand-badge svg { width: 34px; height: 34px; color: var(--gold-300); }
 .brand-text { min-width: 0; }
 .brand-text h1 {
   color: #fff;
@@ -737,7 +734,7 @@ details.panel .panel-body { padding-top: 0; }
 @media (max-width: 560px) {
   body { font-size: 14px; }
   .brand-badge { width: 54px; height: 54px; }
-  .brand-badge img { width: 52px; height: 52px; }
+  .brand-badge svg { width: 28px; height: 28px; }
   .brand-text h1 { font-size: 1.55rem; }
   .brand-text p { font-size: 0.92rem; }
   .topbar-actions { grid-template-columns: 1fr; }
@@ -772,40 +769,229 @@ details.panel .panel-body { padding-top: 0; }
 }
 
 @media print {
-  @page { margin: 12mm; size: A4 portrait; }
-  body { background: #fff; color: #000; font-size: 10pt; }
-  .topbar, .operation-grid, .mobile-bar, .toast-region, .feed-tools, .escala-actions, .legal-alert, .btn { display: none !important; }
-  .layout { display: block; width: auto; padding: 0; margin: 0; }
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+    max-width: 100%;
+    transform: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+  }
+
+  .topbar,
+  .operation-grid,
+  .mobile-bar,
+  .toast-region,
+  .feed-tools,
+  .escala-actions,
+  .btn,
+  .btn-icon,
+  button,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  .layout,
+  .feed,
+  .table-wrap,
+  .metrics,
+  .metric-card,
+  .legal-alert,
+  .print-header,
+  .print-footer {
+    position: static !important;
+  }
+
+  .layout {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    overflow: visible !important;
+  }
+
   .print-only { display: block; }
   .print-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    display: block;
     padding-bottom: 12px;
-    margin-bottom: 18px;
-    border-bottom: 2px solid #000;
+    margin-bottom: 12px;
+    border-bottom: 1.5px solid #111;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
-  .print-header img { width: 60px; height: 60px; object-fit: contain; }
-  .print-header h1 { font-size: 15pt; }
-  .print-header p { color: #444; font-size: 9pt; margin-top: 2px; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-  .metric-card { min-height: 0; border: 1px solid #000; border-radius: 0; box-shadow: none; padding: 9px; }
+
+  .print-header h1 {
+    color: #111 !important;
+    font-size: 16pt;
+    line-height: 1.15;
+  }
+
+  .print-header p {
+    color: #444 !important;
+    font-size: 8.5pt;
+    margin-top: 3px;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .metric-card {
+    min-height: 0;
+    border: 1px solid #bbb;
+    border-radius: 0;
+    background: #fff !important;
+    padding: 7px;
+    align-items: flex-start;
+    gap: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .metric-card::before { display: none; }
-  .metric-value { color: #000 !important; font-size: 13pt; }
-  .metric-label, .metric-sub { color: #444; }
-  .feed { border: 0; box-shadow: none; margin-top: 0; }
+  .metric-icon { display: none; }
+
+  .metric-value {
+    color: #111 !important;
+    font-size: 12pt;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+  }
+
+  .metric-label,
+  .metric-sub {
+    color: #444 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .metric-label {
+    font-size: 6.8pt;
+    letter-spacing: 0;
+  }
+
+  .metric-sub {
+    font-size: 7.2pt;
+    margin-top: 2px;
+  }
+
+  .feed {
+    border: 0;
+    margin-top: 0;
+    overflow: visible !important;
+  }
+
   .feed-header { padding: 0 0 8px; border-bottom: 1px solid #999; }
-  .table-wrap { overflow: visible; }
-  .escala-table { min-width: 0; font-size: 8.5pt; }
-  .escala-table th, .escala-table td { padding: 6px; border-bottom: 1px solid #ddd; }
-  .chip { border: 1px solid #999; background: none !important; color: #000 !important; padding: 1px 5px; }
+  .feed-header h2 { font-size: 11pt; }
+
+  .table-wrap {
+    width: 100%;
+    overflow: visible !important;
+  }
+
+  .escala-table {
+    display: table;
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 7.7pt;
+  }
+
+  .escala-table thead { display: table-header-group; }
+  .escala-table tbody { display: table-row-group; }
+  .escala-table tr { display: table-row; }
+  .escala-table th,
+  .escala-table td {
+    display: table-cell;
+    padding: 5px;
+    border: 1px solid #d0d0d0;
+    color: #111 !important;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .escala-table th {
+    background: #f1f3f5 !important;
+    color: #222 !important;
+    font-size: 7pt;
+    letter-spacing: 0;
+  }
+
+  .escala-table th:nth-child(8),
+  .escala-table td:nth-child(8) {
+    display: none;
+  }
+
+  .escala-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .escala-table td::before { display: none; }
+  .table-note { color: #555 !important; font-size: 7pt; }
+
+  .chips {
+    gap: 3px;
+  }
+
+  .chip {
+    border: 1px solid #999;
+    background: none !important;
+    color: #111 !important;
+    padding: 1px 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .legal-alert {
+    display: block;
+    margin: 12px 0 0;
+    padding: 8px;
+    border: 1px solid #999;
+    border-radius: 0;
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 8pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .print-footer {
-    margin-top: 22px;
-    padding-top: 10px;
+    margin-top: 12px;
+    padding-top: 8px;
     border-top: 1px solid #999;
-    color: #555;
+    color: #444 !important;
     font-size: 7.5pt;
     text-align: center;
+    overflow-wrap: anywhere;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 

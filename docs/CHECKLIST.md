@@ -25,10 +25,10 @@ Com base na auditoria inicial, este é o plano de ação para atingir os requisi
 - [ ] **Paleta de Cores e Tipografia:** Atualizar o CSS para usar uma fonte moderna (como *Inter* via Google Fonts) e refinar os tons de verde, dourado e azul escuro para dar um aspecto mais solene e profissional.
 - [ ] **Sombras e Cards (Glassmorphism/Modern UI):** Suavizar as bordas, aplicar sombras com profundidade e melhorar os contrastes.
 - [ ] **Micro-interações:** Adicionar efeitos de transição suaves ao focar nos inputs (hover/focus) e animações na adição/remoção de escalas na lista.
-- [ ] **Asset do Brasão:** Garantir que o arquivo real `brasao-19crpm.png` esteja incluído no repositório (pasta `assets/`) e devidamente vinculado.
+- [ ] **Identidade neutra:** Garantir que a interface e o PDF não dependam de brasão específico ou vínculo visual direto a unidade específica.
 
 ## 5. Relatório e Impressão (Módulo 4)
-- [ ] **Layout de Impressão (`@media print`):** Refazer o CSS de impressão. Ao invés de imprimir a tela da calculadora, o layout impresso deve assumir um formato de "Documento/Recibo Oficial A4".
-- [ ] **Cabeçalho do Relatório:** Garantir que o brasão, os dados do policial e o mês de referência apareçam de forma destacada no topo da folha impressa.
+- [ ] **Layout de Impressão (`@media print`):** Refazer o CSS de impressão. Ao invés de imprimir a tela da calculadora, o layout impresso deve assumir um formato de documento A4 claro e legível.
+- [ ] **Cabeçalho do Relatório:** Garantir que o título neutro, a data de geração e o contexto do relatório apareçam de forma destacada no topo da folha impressa.
 - [ ] **Tabela Impressa:** Formatar a lista de escalas como uma grade legível, com totais (diurno, noturno, valor) na parte inferior.
 - [ ] **Rodapé Oficial:** Incluir a data e hora de geração do documento e o aviso legal de que se trata de uma simulação.

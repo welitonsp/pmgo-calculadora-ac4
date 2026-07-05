@@ -1,7 +1,7 @@
 {
-  "name": "Calculadora AC4 — PMGO",
-  "short_name": "AC4 PMGO",
-  "description": "Calculadora de escalas AC4 da Polícia Militar de Goiás — 19º CRPM.",
+  "name": "Calculadora AC4",
+  "short_name": "AC4",
+  "description": "Aplicação web estática para simulação e conferência preliminar de escalas AC4.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
