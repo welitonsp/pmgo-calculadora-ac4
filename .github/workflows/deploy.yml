@@ -32,6 +32,9 @@ jobs:
       - name: Smoke test de interface (Chrome headless)
         run: node tests/smoke.mjs
 
+      - name: Validação mobile (touch targets, barra fixa, overflow)
+        run: node tests/mobile-check.mjs
+
   deploy:
     needs: test
     runs-on: ubuntu-latest

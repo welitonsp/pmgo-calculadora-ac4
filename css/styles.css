@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v30
+   Calculadora AC4 — v31
    ========================================================================== */
 
 /* Inter (variable, 100–900) self-hosted — sem dependência do Google Fonts,
@@ -972,10 +972,9 @@ textarea.control { min-height: 74px; resize: vertical; }
   /* Touch targets WCAG 44×44 px */
   .escala-actions .btn-icon { width: 44px; height: 44px; }
   .select-sm { min-height: 44px; }
+  .feed-tools .btn { min-height: 44px; }
   /* Mobile bar: impede compressão em telas estreitas */
   .mobile-bar-total { flex: 1 1 auto; min-width: 0; overflow: hidden; }
-  /* Footer: espaço para a barra fixa não cobrir conteúdo */
-  .site-footer { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   /* Layout de cartão para a tabela de escalas (tablets e celulares) */
   .escala-table, .escala-table thead, .escala-table tbody, .escala-table tr, .escala-table th, .escala-table td {
     display: block;
@@ -1013,7 +1012,6 @@ textarea.control { min-height: 74px; resize: vertical; }
   .metric-card { min-height: 104px; }
   .launch-grid { grid-template-columns: 1fr; }
   .share-grid { grid-template-columns: repeat(3, 1fr); }
-  .site-footer { padding: 20px 14px calc(90px + env(safe-area-inset-bottom)); }
 }
 
 @media (max-width: 400px) {
@@ -1055,7 +1053,14 @@ textarea.control { min-height: 74px; resize: vertical; }
 }
 .footer-link:hover { color: var(--text); }
 
+/* Estas regras precisam vir DEPOIS da base .site-footer acima — mesma
+   especificidade, então a ordem no arquivo decide quem vence. */
+@media (max-width: 760px) {
+  /* folga para a barra fixa mobile não cobrir o rodapé */
+  .site-footer { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+}
 @media (max-width: 560px) {
+  .site-footer { padding: 20px 14px calc(90px + env(safe-area-inset-bottom)); }
   .site-footer-inner { flex-direction: column; align-items: flex-start; gap: 6px; }
 }
 

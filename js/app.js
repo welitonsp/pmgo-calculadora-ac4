@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v30
+   Calculadora AC4 — v31
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
