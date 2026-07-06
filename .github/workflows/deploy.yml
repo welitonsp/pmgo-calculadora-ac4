@@ -29,6 +29,9 @@ jobs:
       - name: Testes de regressão (cálculo AC4 e .ics)
         run: node tests/run-tests.mjs
 
+      - name: Smoke test de interface (Chrome headless)
+        run: node tests/smoke.mjs
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
