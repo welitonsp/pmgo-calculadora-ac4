@@ -25,6 +25,13 @@ import {
   const $ = (id) => document.getElementById(id);
   const on = (id, evt, fn) => { const el = $(id); if (el) el.addEventListener(evt, fn); };
 
+  /* Adia execução até parar de disparar por `ms` — usado em campos de digitação
+     para não recalcular/re-renderizar a cada tecla (melhora INP). */
+  const debounce = (fn, ms = 200) => {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  };
+
   const STORAGE = {
     escalas:   'pmgoEscalas',
     config:    'pmgoConfig',
@@ -38,6 +45,7 @@ import {
   let ultimaExcluida = null;
   let filtroMes = '';
   let deferredInstallPrompt = null;
+  let submetendo = false;
 
   function baixarArquivoAgenda(lista, mensagem = 'Arquivo .ics gerado para importar no Google Agenda.') {
     const arquivo = montarICS(lista);
@@ -311,37 +319,48 @@ import {
   }
 
   async function submeterFormulario() {
-    const dados = validarFormulario();
-    if (!dados) return;
+    /* Reentrância: duplo toque/Ctrl+Enter repetido não deve processar duas vezes.
+       O botão é desabilitado no clique e reabilitado no finally. */
+    if (submetendo) return;
+    submetendo = true;
+    const btn = $('btnSubmit');
+    if (btn) btn.disabled = true;
+    try {
+      const dados = validarFormulario();
+      if (!dados) return;
 
-    const duracaoHoras = (parseDateTimeLocal(dados.fim) - parseDateTimeLocal(dados.inicio)) / 3600000;
-    if (duracaoHoras > 24) {
-      const ok = await dialogConfirmar(
-        `A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`,
-        { textoOk: 'Confirmar', perigoso: false }
-      );
-      if (!ok) return;
+      const duracaoHoras = (parseDateTimeLocal(dados.fim) - parseDateTimeLocal(dados.inicio)) / 3600000;
+      if (duracaoHoras > 24) {
+        const ok = await dialogConfirmar(
+          `A escala tem ${duracaoHoras.toFixed(1)} horas de duração. Confirma?`,
+          { textoOk: 'Confirmar', perigoso: false }
+        );
+        if (!ok) return;
+      }
+
+      const tabelaAtual = validarTabelaAtual();
+      if (!tabelaAtual) return;
+
+      haptic(10);
+
+      if (editandoId !== null) {
+        const idx = escalas.findIndex((e) => e.id === editandoId);
+        if (idx >= 0) escalas[idx] = { ...escalas[idx], ...dados, tabela: escalas[idx].tabela || tabelaAtual };
+        cancelarEdicao();
+        toast('Escala atualizada.');
+      } else {
+        escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
+        if ($('escalaDescricao')) $('escalaDescricao').value = '';
+        if ($('escalaQtdPm'))    $('escalaQtdPm').value = '1';
+        if ($('escalaOrigem'))   $('escalaOrigem').value = 'AC4';
+        toast('Escala adicionada.');
+      }
+      salvar();
+      render();
+    } finally {
+      submetendo = false;
+      if (btn) btn.disabled = false;
     }
-
-    const tabelaAtual = validarTabelaAtual();
-    if (!tabelaAtual) return;
-
-    haptic(10);
-
-    if (editandoId !== null) {
-      const idx = escalas.findIndex((e) => e.id === editandoId);
-      if (idx >= 0) escalas[idx] = { ...escalas[idx], ...dados, tabela: escalas[idx].tabela || tabelaAtual };
-      cancelarEdicao();
-      toast('Escala atualizada.');
-    } else {
-      escalas.push({ id: Date.now() + Math.random(), ...dados, tabela: tabelaAtual });
-      if ($('escalaDescricao')) $('escalaDescricao').value = '';
-      if ($('escalaQtdPm'))    $('escalaQtdPm').value = '1';
-      if ($('escalaOrigem'))   $('escalaOrigem').value = 'AC4';
-      toast('Escala adicionada.');
-    }
-    salvar();
-    render();
   }
 
   function editarEscala(id) {
@@ -630,8 +649,12 @@ import {
     on('impArquivo', 'change', lerArquivoImportacao);
     on('impConfirmar', 'click', confirmarImportacao);
     on('impCancelar', 'click', () => $('dialogImport')?.close());
+    /* `input` dispara a cada tecla e cada chamada recalcula todos os eventos —
+       com debounce só reconstrói quando o usuário pausa. `change` (blur/datas)
+       segue imediato. */
+    const atualizarListaDebounced = debounce(atualizarListaImportacao, 200);
     ['impDataIni', 'impDataFim', 'impPalavras'].forEach((id) => {
-      on(id, 'input', atualizarListaImportacao);
+      on(id, 'input', atualizarListaDebounced);
       on(id, 'change', atualizarListaImportacao);
     });
   }
