@@ -14,8 +14,8 @@
   <!-- Preload da fonte principal — reduz reflow/CLS do font-swap da Inter -->
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-  <link rel="stylesheet" href="css/styles.css?v=35">
-  <script src="js/theme.js?v=35"></script>
+  <link rel="stylesheet" href="css/styles.css?v=36">
+  <script src="js/theme.js?v=36"></script>
 </head>
 <body>
 
@@ -160,11 +160,14 @@
           <!-- Cabeçalho visível apenas no modo bottom sheet (mobile) -->
           <div class="mobile-launch-header">
             <span class="mobile-launch-handle" aria-hidden="true"></span>
-            <button type="button" class="mobile-launch-close" id="mobileLaunchClose" aria-label="Fechar lançamento de escala">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M18 6 6 18M6 6l12 12"/>
-              </svg>
-            </button>
+            <div class="mobile-launch-titlebar">
+              <h2 class="mobile-launch-title" id="mobileLaunchTitle">Nova escala AC4</h2>
+              <button type="button" class="mobile-launch-close" id="mobileLaunchClose" aria-label="Fechar lançamento de escala">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <h2 class="panel-title" id="formTitle">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -177,47 +180,58 @@
             <div class="launch-grid">
 
               <div class="field" id="fieldInicio">
-                <label for="escalaInicio">Início</label>
+                <label for="escalaInicio"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>Início</label>
                 <input type="datetime-local" class="control" id="escalaInicio" required aria-required="true">
                 <p class="field-error" role="alert">Informe a data e hora de início.</p>
               </div>
 
               <div class="field" id="fieldDuracao">
-                <label for="escalaDuracao">Duração</label>
+                <label for="escalaDuracao"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span>Duração<span class="dur-rapida-tag"> rápida</span></label>
+                <!-- Desktop: select. Mobile: chips rápidos ligados ao mesmo #escalaDuracao. -->
                 <select class="control" id="escalaDuracao">
                   <option value="">Personalizada</option>
                   <option value="12">12 horas</option>
                   <option value="14">14 horas</option>
                   <option value="24">24 horas</option>
                 </select>
+                <div class="dur-chips" id="durChips" role="group" aria-label="Duração rápida">
+                  <button type="button" class="dur-chip" data-horas="12">12h</button>
+                  <button type="button" class="dur-chip" data-horas="14">14h</button>
+                  <button type="button" class="dur-chip" data-horas="24">24h</button>
+                </div>
               </div>
 
               <div class="field" id="fieldFim">
-                <label for="escalaFim">Término</label>
+                <label for="escalaFim"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>Término<span class="auto-tag"> (automático)</span></label>
                 <input type="datetime-local" class="control" id="escalaFim" required aria-required="true">
                 <p class="field-error" role="alert">O término deve ser depois do início.</p>
                 <!-- Espelho legível do término: alguns navegadores mobile não
                      repintam o datetime-local quando o valor é definido por JS -->
                 <p class="fim-auto" id="fimResumo" role="status" aria-live="polite"></p>
+                <p class="field-hint fim-hint">O término é calculado automaticamente com base no início e na duração.</p>
               </div>
 
               <div class="field" id="fieldQtdPm">
-                <label for="escalaQtdPm">Qtd. PM</label>
-                <input type="number" class="control" id="escalaQtdPm"
-                       min="1" max="999" value="1"
-                       placeholder="1"
-                       aria-describedby="hintQtdPm">
+                <label for="escalaQtdPm"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Qtd. PM</label>
+                <div class="qtd-control">
+                  <button type="button" class="qtd-btn" id="qtdMinus" aria-label="Diminuir quantidade de PM" tabindex="-1">&minus;</button>
+                  <input type="number" class="control" id="escalaQtdPm"
+                         min="1" max="999" value="1"
+                         placeholder="1"
+                         aria-describedby="hintQtdPm">
+                  <button type="button" class="qtd-btn" id="qtdPlus" aria-label="Aumentar quantidade de PM" tabindex="-1">+</button>
+                </div>
                 <p class="field-hint" id="hintQtdPm">Valor multiplicado pelo nº de PMs</p>
               </div>
 
               <div class="field" id="fieldDescricao">
-                <label for="escalaDescricao">Unidade <span class="field-optional">(opcional)</span></label>
+                <label for="escalaDescricao"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 9h4M10 13h4M10 17h4"/></svg></span>Unidade <span class="field-optional">(opcional)</span></label>
                 <input type="text" class="control" id="escalaDescricao" maxlength="80"
                        placeholder="Ex.: 1ª CIA, BPChq, RPMon...">
               </div>
 
               <div class="field" id="fieldOrigem">
-                <label for="escalaOrigem">Origem</label>
+                <label for="escalaOrigem"><span class="field-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg></span>Origem</label>
                 <select class="control" id="escalaOrigem">
                   <option value="AC4">AC4</option>
                   <option value="AGETOP">AGETOP</option>
@@ -300,7 +314,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v35 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v36 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -455,7 +469,7 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.js?v=35"></script>
+  <script type="module" src="js/app.js?v=36"></script>
 
   <!-- Relatório profissional de impressão — populado pelo JS antes de window.print() -->
   <section id="printReport">
