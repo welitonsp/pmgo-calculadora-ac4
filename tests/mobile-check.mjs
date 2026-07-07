@@ -155,6 +155,20 @@ const ROTEIRO_MOBILE = `(async () => {
   const barra = rect('.mobile-bar');
   ok('Footer com folga para a barra fixa', barra && footPad >= barra.height, Math.round(footPad) + 'px de padding vs barra ' + (barra && Math.round(barra.height)) + 'px');
 
+  // 8b. métricas premium: só o card de Valor + resumo em texto
+  const cardsVis = [...document.querySelectorAll('.metric-card')].filter((c) => getComputedStyle(c).display !== 'none').length;
+  ok('Só o card de Valor visível no mobile', cardsVis === 1, cardsVis + ' card(s)');
+  const mResumo = document.getElementById('metricResumoMobile');
+  ok('Resumo das métricas visível (Xh · N escalas)', !!mResumo && getComputedStyle(mResumo).display !== 'none' && /escala/.test(mResumo.textContent), mResumo && mResumo.textContent);
+
+  // 8c. lista premium: cards enxutos no lugar da tabela
+  ok('Tabela oculta no mobile', getComputedStyle(document.querySelector('.table-wrap')).display === 'none');
+  ok('Cards de escala visíveis no mobile', getComputedStyle(document.querySelector('.escala-cards')).display !== 'none');
+  const cardVal = document.querySelector('.escala-card .ec-value');
+  ok('Card de escala mostra o valor', !!cardVal && cardVal.textContent.includes('R$'), cardVal && cardVal.textContent);
+  const cardAcao = rect('.escala-card .escala-actions .btn-icon');
+  ok('Ações do card ≥ 44px', cardAcao && cardAcao.width >= 44 && cardAcao.height >= 44, cardAcao && Math.round(cardAcao.width) + '×' + Math.round(cardAcao.height));
+
   // 9. bottom sheet de lançamento: abre por "Nova escala", fecha pelo X
   const painel = document.querySelector('.launch-panel');
   const btnAdd = document.getElementById('mobileAdd');
@@ -179,6 +193,8 @@ const ROTEIRO_MOBILE = `(async () => {
   ok('Duração 14h preenche o término (valor)', document.getElementById('escalaFim').value === '2026-07-11T08:00', document.getElementById('escalaFim').value);
   const resumo = document.getElementById('fimResumo');
   ok('Espelho legível do término visível', !!resumo && resumo.textContent.includes('11/07') && getComputedStyle(resumo).display !== 'none', resumo && resumo.textContent);
+  const lResumo = document.getElementById('launchResumo');
+  ok('Resumo do lançamento no sheet (14h · 1 PM · AC4 · R$)', !!lResumo && getComputedStyle(lResumo).display !== 'none' && /14h/.test(lResumo.textContent) && /R\\$/.test(lResumo.textContent), lResumo && lResumo.textContent);
 
   // 11. chips de duração rápida (mobile): clicar 24h ativa o chip e recalcula término
   const chip24 = [...document.querySelectorAll('#durChips .dur-chip')].find((c) => c.dataset.horas === '24');

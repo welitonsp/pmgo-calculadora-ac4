@@ -496,7 +496,10 @@ textarea.control { min-height: 74px; resize: vertical; }
 .dur-rapida-tag,
 .auto-tag,
 .fim-hint,
-.qtd-btn { display: none; }
+.qtd-btn,
+.escala-cards,
+.metric-resumo-mobile,
+.launch-resumo { display: none; }
 
 /* ===== TARIFF STRIP — referência discreta de valores ===== */
 .tariff-strip {
@@ -1237,6 +1240,72 @@ textarea.control { min-height: 74px; resize: vertical; }
   }
   .qtd-btn:active { background: var(--surface-3); }
   .qtd-control input#escalaQtdPm { min-width: 0; }
+
+  /* ===== Resumo do lançamento no sheet ===== */
+  .launch-resumo {
+    display: block;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--green-600) 12%, var(--surface-2));
+    border: 1px solid color-mix(in srgb, var(--green-600) 24%, transparent);
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .launch-resumo.vazio { display: none; }
+
+  /* ===== Métricas premium: só o card de Valor + resumo em texto ===== */
+  .metrics { display: block; }
+  .metric-card:not(.highlight) { display: none; }
+  .metric-card.highlight {
+    min-height: 0;
+    padding: 16px 18px;
+    gap: 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .metric-card.highlight .metric-icon { display: none; }
+  .metric-card.highlight .metric-sub { display: none; }
+  .metric-resumo-mobile {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== Lista premium: cards enxutos no lugar da tabela ===== */
+  .table-wrap { display: none; }
+  .escala-cards { display: grid; gap: 10px; }
+  .escala-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .ec-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .ec-date { font-size: 0.92rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .ec-date b { font-weight: 800; }
+  .ec-dot { width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; }
+  .ec-dot-blue { background: var(--blue-600); }
+  .ec-dot-red { background: var(--red-600); }
+  .ec-tag-night {
+    margin-left: 2px; padding: 1px 7px; border-radius: 999px;
+    background: var(--info-soft); color: var(--info-text);
+    font-size: 0.66rem; font-weight: 800;
+  }
+  .ec-time { margin-top: 4px; color: var(--text-muted); font-size: 0.84rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ec-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+  .ec-value { color: var(--green-600); font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ec-value small { display: block; color: var(--text-faint); font-size: 0.68rem; font-weight: 600; }
+  .escala-card .escala-actions { gap: 2px; }
+  .escala-card .escala-actions .btn-icon { width: 44px; height: 44px; border-color: transparent; background: transparent; }
+  .escala-card .escala-actions .delete:hover { background: var(--danger-soft); color: var(--danger); }
 }
 
 [data-theme="dark"] .dur-chip.is-active {

@@ -406,6 +406,7 @@ import {
     setTituloSheet('Editar escala');
     atualizarResumoFim();
     atualizarChipsDuracao();
+    atualizarResumoLancamento();
     if (isMobileViewport()) {
       /* já vem preenchido — não sobrescrever com data/hora atual */
       abrirPainelLancamentoMobile();
@@ -423,6 +424,22 @@ import {
     if (!el) return;
     const v = $('escalaFim')?.value || '';
     el.textContent = parseDateTimeLocal(v) ? `${fmtDiaSemana(v)}, ${fmtDataHora(v)}` : '';
+  }
+
+  /* Resumo compacto do lançamento (mobile): "14h · 1 PM · AC4 · R$ 595,00".
+     Usa o calcularEscala existente sobre os valores atuais do formulário. */
+  function atualizarResumoLancamento() {
+    const el = $('launchResumo');
+    if (!el) return;
+    const inicio = $('escalaInicio')?.value || '';
+    const fim = $('escalaFim')?.value || '';
+    const intervalo = validarIntervaloEscala(inicio, fim);
+    if (!intervalo.ok) { el.textContent = ''; el.classList.add('vazio'); return; }
+    const r = calcularEscala({ inicio, fim });
+    const qtd = lerQtdPm();
+    const origem = labelOrigem($('escalaOrigem')?.value || 'AC4');
+    el.textContent = `${fmtHoras(r.mins)} · ${qtd} PM · ${origem} · ${fmtMoeda(r.valorCentavos * qtd)}`;
+    el.classList.remove('vazio');
   }
 
   /* Chips de duração rápida (mobile): refletem #escalaDuracao — mesma fonte de
@@ -718,6 +735,45 @@ import {
     });
   }
 
+  /* Botões de ação de uma escala — reusados na tabela (desktop) e nos
+     cards enxutos (mobile). A delegação em #listaEscalas trata ambos. */
+  const botoesAcaoHTML = (id) => `
+    <div class="escala-actions">
+      <button class="btn-icon gcal" data-acao="agenda" data-id="${id}" title="Adicionar ao Google Agenda" aria-label="Adicionar ao Google Agenda">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/></svg>
+      </button>
+      <button class="btn-icon" data-acao="duplicar" data-id="${id}" title="Duplicar para o dia seguinte" aria-label="Duplicar">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+      </button>
+      <button class="btn-icon" data-acao="editar" data-id="${id}" title="Editar" aria-label="Editar">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+      </button>
+      <button class="btn-icon delete" data-acao="remover" data-id="${id}" title="Excluir" aria-label="Excluir">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      </button>
+    </div>`;
+
+  /* Card enxuto de uma escala (mobile): data+dia+horas, faixa horária, valor e ações.
+     Estrutura própria — o desktop segue usando a tabela, sem alteração. */
+  const cardEscalaHTML = (e, r) => {
+    const qtd = e.qtdPm || 1;
+    const valorTotal = r.valorCentavos * qtd;
+    const tipoCls = r.minVermelha > 0 ? 'ec-dot-red' : 'ec-dot-blue';
+    const fimStr = fmtData(e.inicio) === fmtData(e.fim) ? fmtHora(e.fim) : `${fmtData(e.fim)} ${fmtHora(e.fim)}`;
+    const noturno = r.minNoturno > 0 ? '<span class="ec-tag-night">noturno</span>' : '';
+    return `
+      <div class="escala-card">
+        <div class="ec-top">
+          <span class="ec-date"><span class="ec-dot ${tipoCls}"></span>${fmtData(e.inicio)} <b>${fmtDiaSemana(e.inicio)}</b> · ${fmtHoras(r.mins)} ${noturno}</span>
+        </div>
+        <div class="ec-time">${fmtHora(e.inicio)} → ${fimStr}</div>
+        <div class="ec-bottom">
+          <span class="ec-value">${fmtMoeda(valorTotal)}${qtd > 1 ? `<small>${qtd} PMs</small>` : ''}</span>
+          ${botoesAcaoHTML(e.id)}
+        </div>
+      </div>`;
+  };
+
   /* ----------------------------------------------------------- render */
   function render() {
     atualizarSelectMes();
@@ -739,6 +795,10 @@ import {
 
     const sufixo = filtroMes ? ` em ${fmtMesRef(filtroMes)}` : ' no período';
     $('totQtd').textContent = `${lista.length} escala${lista.length === 1 ? '' : 's'}${sufixo}`;
+    /* Resumo compacto do card de Valor (mobile): "96h · 8 escalas" */
+    if ($('metricResumoMobile')) {
+      $('metricResumoMobile').textContent = `${fmtHoras(totMins)} · ${lista.length} escala${lista.length === 1 ? '' : 's'}`;
+    }
     $('btnClearAll').classList.toggle('hidden', escalas.length === 0);
 
     const container = $('listaEscalas');
@@ -790,22 +850,7 @@ import {
           <td data-label="Tipo"><div class="chips">${tipoChips.join('')}</div></td>
           <td data-label="Horas">${fmtHoras(r.mins)}</td>
           <td data-label="Valor" class="value-cell">${fmtMoeda(valorTotal)}${qtd > 1 ? `<span class="table-note">${fmtMoeda(r.valorCentavos)}/PM</span>` : ''}</td>
-          <td data-label="Ações">
-            <div class="escala-actions">
-              <button class="btn-icon gcal" data-acao="agenda" data-id="${e.id}" title="Adicionar ao Google Agenda" aria-label="Adicionar ao Google Agenda">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/></svg>
-              </button>
-              <button class="btn-icon" data-acao="duplicar" data-id="${e.id}" title="Duplicar para o dia seguinte" aria-label="Duplicar">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-              </button>
-              <button class="btn-icon" data-acao="editar" data-id="${e.id}" title="Editar" aria-label="Editar">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-              </button>
-              <button class="btn-icon delete" data-acao="remover" data-id="${e.id}" title="Excluir" aria-label="Excluir">
-                <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-              </button>
-            </div>
-          </td>
+          <td data-label="Ações">${botoesAcaoHTML(e.id)}</td>
         </tr>`;
     });
     html += '</tbody>';
@@ -821,8 +866,11 @@ import {
         </tfoot>`;
     }
     html += '</table></div>';
-    container.innerHTML = html;
 
+    /* Cards enxutos (mobile) — vêm antes da tabela no DOM; CSS mostra um ou
+       outro conforme a largura. Mesma fonte de dados, sem tocar no desktop. */
+    const cardsMobile = `<div class="escala-cards">${resultados.map(({ e, r }) => cardEscalaHTML(e, r)).join('')}</div>`;
+    container.innerHTML = cardsMobile + html;
   }
 
   /* ------------------------------------------------------- exportações */
@@ -1144,6 +1192,7 @@ import {
           $('escalaInicio').value = toInputLocal(new Date());
           aplicarDuracao();          /* recalcula término se já havia duração escolhida */
         }
+        atualizarResumoLancamento();
         abrirPainelLancamentoMobile();
         return;
       }
@@ -1190,6 +1239,7 @@ import {
       $('fieldFim').querySelector('.control')?.removeAttribute('aria-invalid');
       atualizarResumoFim();
       atualizarChipsDuracao();
+      atualizarResumoLancamento();
       return true;
     };
     on('escalaDuracao', 'input', aplicarDuracao);
@@ -1200,9 +1250,15 @@ import {
       if ($('escalaDuracao')) $('escalaDuracao').value = '';
       atualizarResumoFim();
       atualizarChipsDuracao();
+      atualizarResumoLancamento();
     };
     on('escalaFim', 'input', marcarDuracaoPersonalizada);
     on('escalaFim', 'change', marcarDuracaoPersonalizada);
+    /* Resumo do lançamento também depende de Qtd. PM e Origem */
+    on('escalaQtdPm', 'input', atualizarResumoLancamento);
+    on('escalaQtdPm', 'change', atualizarResumoLancamento);
+    on('escalaOrigem', 'input', atualizarResumoLancamento);
+    on('escalaOrigem', 'change', atualizarResumoLancamento);
 
     /* Chips de duração rápida (mobile) — escrevem no mesmo #escalaDuracao. */
     document.querySelectorAll('#durChips .dur-chip').forEach((chip) => {
@@ -1219,6 +1275,7 @@ import {
       if (!inp) return;
       const atual = parseInt(inp.value || '1', 10);
       inp.value = Math.min(999, Math.max(1, (Number.isFinite(atual) ? atual : 1) + delta));
+      atualizarResumoLancamento();
     };
     on('qtdMinus', 'click', () => ajustarQtd(-1));
     on('qtdPlus', 'click', () => ajustarQtd(1));
