@@ -489,6 +489,15 @@ textarea.control { min-height: 74px; resize: vertical; }
 .mobile-launch-header,
 .mobile-launch-backdrop { display: none; }
 
+/* Elementos de UI exclusivos do bottom sheet mobile — inertes no desktop.
+   O #escalaQtdPm segue funcionando em .qtd-control (bloco simples no desktop). */
+.field-ico,
+.dur-chips,
+.dur-rapida-tag,
+.auto-tag,
+.fim-hint,
+.qtd-btn { display: none; }
+
 /* ===== TARIFF STRIP — referência discreta de valores ===== */
 .tariff-strip {
   margin-top: 10px;
@@ -1113,6 +1122,127 @@ textarea.control { min-height: 74px; resize: vertical; }
     -webkit-tap-highlight-color: transparent;
   }
   .mobile-launch-close:hover { background: var(--surface-2); color: var(--text); }
+
+  /* ===== UI estilo app dentro do bottom sheet ===== */
+  /* Título no header do sheet; oculta o título do card (desktop) */
+  .launch-panel .panel-title { display: none; }
+  .mobile-launch-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+  }
+  .mobile-launch-title { font-size: 1.18rem; font-weight: 800; color: var(--text); }
+
+  /* Campos em linha: rótulo (com ícone) à esquerda, controle à direita */
+  .launch-panel .launch-grid { grid-template-columns: 1fr; gap: 0; }
+  .launch-panel .field {
+    display: grid;
+    grid-template-columns: minmax(80px, 42%) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    margin: 0;
+    padding: 13px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  }
+  .launch-panel .field label {
+    grid-column: 1;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text);
+  }
+  .field-ico {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    color: var(--gold-500);
+  }
+  .field-ico svg { width: 20px; height: 20px; }
+  .launch-panel .field > .control,
+  .launch-panel .field > .qtd-control,
+  .launch-panel .field > .dur-chips {
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+  }
+  .launch-panel .field > .control { text-align: right; }
+  .launch-panel #escalaQtdPm.control { text-align: center; }
+  /* Mensagens/dicas ocupam a linha inteira, abaixo do par rótulo/controle */
+  .launch-panel .field .field-error,
+  .launch-panel .field .fim-auto,
+  .launch-panel .field .fim-hint,
+  .launch-panel .field .field-hint {
+    grid-column: 1 / -1;
+    justify-self: start;
+    text-align: left;
+    margin-top: 7px;
+  }
+
+  /* Duração rápida: chips no lugar do select */
+  #fieldDuracao > .control { display: none; }
+  .dur-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .dur-rapida-tag { display: inline; color: var(--text-faint); font-weight: 700; }
+  .dur-chip {
+    min-height: 42px;
+    padding: 0 4px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .dur-chip.is-active {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: #fff;
+  }
+
+  /* Término automático */
+  .auto-tag { display: inline; margin-left: 2px; color: var(--text-faint); font-weight: 700; font-size: 0.76rem; }
+  .fim-hint { display: block; color: var(--text-faint); }
+
+  /* Stepper de Qtd. PM */
+  .qtd-control { display: flex; align-items: center; gap: 8px; }
+  .qtd-btn {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .qtd-btn:active { background: var(--surface-3); }
+  .qtd-control input#escalaQtdPm { min-width: 0; }
+}
+
+[data-theme="dark"] .dur-chip.is-active {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--navy-950);
 }
 
 @media (max-width: 560px) {

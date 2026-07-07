@@ -180,6 +180,30 @@ const ROTEIRO_MOBILE = `(async () => {
   const resumo = document.getElementById('fimResumo');
   ok('Espelho legível do término visível', !!resumo && resumo.textContent.includes('11/07') && getComputedStyle(resumo).display !== 'none', resumo && resumo.textContent);
 
+  // 11. chips de duração rápida (mobile): clicar 24h ativa o chip e recalcula término
+  const chip24 = [...document.querySelectorAll('#durChips .dur-chip')].find((c) => c.dataset.horas === '24');
+  ok('Chips de duração visíveis no mobile', getComputedStyle(document.getElementById('durChips')).display !== 'none');
+  ok('Select de duração oculto no mobile', getComputedStyle(document.querySelector('#fieldDuracao > .control')).display === 'none');
+  chip24.click();
+  await espera(30);
+  ok('Chip 24h fica ativo ao tocar', chip24.classList.contains('is-active') && document.getElementById('escalaDuracao').value === '24');
+  ok('Chip 24h recalcula término', document.getElementById('escalaFim').value === '2026-07-11T18:00', document.getElementById('escalaFim').value);
+
+  // 12. stepper de Qtd. PM
+  const qtd = document.getElementById('escalaQtdPm');
+  qtd.value = '1';
+  document.getElementById('qtdPlus').click();
+  document.getElementById('qtdPlus').click();
+  ok('Stepper + aumenta Qtd. PM', qtd.value === '3', qtd.value);
+  document.getElementById('qtdMinus').click();
+  ok('Stepper - diminui Qtd. PM', qtd.value === '2', qtd.value);
+  qtd.value = '1'; document.getElementById('qtdMinus').click();
+  ok('Stepper não passa de 1 (mínimo)', qtd.value === '1', qtd.value);
+
+  // 13. título do sheet e ícones dos campos
+  ok('Título do sheet "Nova escala AC4"', document.getElementById('mobileLaunchTitle').textContent.trim() === 'Nova escala AC4');
+  ok('Ícones dos campos visíveis no mobile', getComputedStyle(document.querySelector('#fieldInicio .field-ico')).display !== 'none');
+
   document.getElementById('mobileLaunchClose').click();
   await espera(350);
   ok('Botão fechar recolhe o sheet', !painel.classList.contains('is-open'));

@@ -403,7 +403,9 @@ import {
     $('btnSubmit').textContent = 'Salvar alterações';
     $('btnCancelEdit').classList.remove('hidden');
     $('formTitle').lastChild.textContent = ' Editar escala';
+    setTituloSheet('Editar escala');
     atualizarResumoFim();
+    atualizarChipsDuracao();
     if (isMobileViewport()) {
       /* já vem preenchido — não sobrescrever com data/hora atual */
       abrirPainelLancamentoMobile();
@@ -423,8 +425,22 @@ import {
     el.textContent = parseDateTimeLocal(v) ? `${fmtDiaSemana(v)}, ${fmtDataHora(v)}` : '';
   }
 
+  /* Chips de duração rápida (mobile): refletem #escalaDuracao — mesma fonte de
+     verdade do <select> do desktop, sem lógica de cálculo paralela. */
+  function atualizarChipsDuracao() {
+    const val = $('escalaDuracao')?.value || '';
+    document.querySelectorAll('#durChips .dur-chip').forEach((c) => {
+      const ativo = c.dataset.horas === val;
+      c.classList.toggle('is-active', ativo);
+      c.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+  }
+
+  const setTituloSheet = (txt) => { const el = $('mobileLaunchTitle'); if (el) el.textContent = txt; };
+
   function cancelarEdicao() {
     editandoId = null;
+    setTituloSheet('Nova escala AC4');
     if ($('escalaDescricao')) $('escalaDescricao').value = '';
     if ($('escalaQtdPm'))    $('escalaQtdPm').value = '1';
     if ($('escalaOrigem'))   $('escalaOrigem').value = 'AC4';
@@ -1123,7 +1139,11 @@ import {
     on('mobileAdd', 'click', () => {
       if (isMobileViewport()) {
         /* nova escala: pré-preenche o início com agora; ao editar, preserva */
-        if (editandoId === null) $('escalaInicio').value = toInputLocal(new Date());
+        if (editandoId === null) {
+          setTituloSheet('Nova escala AC4');
+          $('escalaInicio').value = toInputLocal(new Date());
+          aplicarDuracao();          /* recalcula término se já havia duração escolhida */
+        }
         abrirPainelLancamentoMobile();
         return;
       }
@@ -1169,6 +1189,7 @@ import {
       $('fieldFim').classList.remove('invalid');
       $('fieldFim').querySelector('.control')?.removeAttribute('aria-invalid');
       atualizarResumoFim();
+      atualizarChipsDuracao();
       return true;
     };
     on('escalaDuracao', 'input', aplicarDuracao);
@@ -1178,9 +1199,29 @@ import {
     const marcarDuracaoPersonalizada = () => {
       if ($('escalaDuracao')) $('escalaDuracao').value = '';
       atualizarResumoFim();
+      atualizarChipsDuracao();
     };
     on('escalaFim', 'input', marcarDuracaoPersonalizada);
     on('escalaFim', 'change', marcarDuracaoPersonalizada);
+
+    /* Chips de duração rápida (mobile) — escrevem no mesmo #escalaDuracao. */
+    document.querySelectorAll('#durChips .dur-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        if ($('escalaDuracao')) $('escalaDuracao').value = chip.dataset.horas;
+        aplicarDuracao();
+        atualizarChipsDuracao();
+      });
+    });
+
+    /* Stepper de Qtd. PM (mobile) — ajusta o mesmo #escalaQtdPm, faixa 1–999. */
+    const ajustarQtd = (delta) => {
+      const inp = $('escalaQtdPm');
+      if (!inp) return;
+      const atual = parseInt(inp.value || '1', 10);
+      inp.value = Math.min(999, Math.max(1, (Number.isFinite(atual) ? atual : 1) + delta));
+    };
+    on('qtdMinus', 'click', () => ajustarQtd(-1));
+    on('qtdPlus', 'click', () => ajustarQtd(1));
 
     on('listaEscalas', 'click', (ev) => {
       const btn = ev.target.closest('[data-acao]');
