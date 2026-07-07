@@ -1115,7 +1115,37 @@ import {
     const mostrarBotaoInstalar = () => $('shareInstallOpt')?.classList.remove('hidden');
     const ocultarBotaoInstalar = () => $('shareInstallOpt')?.classList.add('hidden');
 
-    if (isIOS) mostrarBotaoInstalar();
+    /* Entrada de instalação sempre disponível via Compartilhar → Instalar,
+       em qualquer navegador/sistema que ainda não esteja rodando instalado. */
+    mostrarBotaoInstalar();
+
+    const instrucaoManual = () => dialogConfirmar(
+      isIOS
+        ? 'No Safari: toque em ⬆︎ Compartilhar e depois em “Adicionar à Tela de Início” para instalar o app.'
+        : 'Para instalar: abra o menu do navegador (⋮) e toque em “Instalar app” ou “Adicionar à tela inicial”.',
+      { textoOk: 'Entendi', perigoso: false }
+    );
+
+    async function instalar() {
+      /* Android/Chrome: usa o prompt nativo quando disponível. */
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        if (outcome === 'accepted') {
+          ocultarBotaoInstalar();
+          $('pwaBanner')?.classList.add('hidden');
+          toast('App instalado! Acesse pela tela inicial.');
+        }
+        return;
+      }
+      /* iOS e demais casos sem prompt nativo: instrução passo a passo. */
+      await instrucaoManual();
+    }
+
+    /* Banner proativo: no iOS já aparece no carregamento (não há evento nativo);
+       no Android aparece quando o navegador sinaliza que dá para instalar. */
+    if (isIOS && !dismissed) $('pwaBanner')?.classList.remove('hidden');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1124,39 +1154,8 @@ import {
       mostrarBotaoInstalar();
     });
 
-    on('shareInstallOpt', 'click', async () => {
-      $('dialogShare')?.close();
-      haptic(10);
-      if (isIOS) {
-        await dialogConfirmar(
-          'No Safari: toque em ↑ Compartilhar → "Adicionar à Tela de Início" para instalar o app.',
-          { textoOk: 'Entendi', perigoso: false }
-        );
-        return;
-      }
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      const { outcome } = await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      if (outcome === 'accepted') {
-        ocultarBotaoInstalar();
-        $('pwaBanner')?.classList.add('hidden');
-        toast('App instalado! Acesse pela tela inicial.');
-      }
-    });
-
-    on('pwaBannerInstall', 'click', async () => {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      const { outcome } = await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      $('pwaBanner')?.classList.add('hidden');
-      if (outcome === 'accepted') {
-        ocultarBotaoInstalar();
-        toast('App instalado! Acesse pela tela inicial.');
-      }
-    });
-
+    on('shareInstallOpt', 'click', () => { $('dialogShare')?.close(); haptic(10); instalar(); });
+    on('pwaBannerInstall', 'click', instalar);
     on('pwaBannerClose', 'click', () => {
       $('pwaBanner')?.classList.add('hidden');
       localStorage.setItem(STORAGE.pwaBanner, '1');

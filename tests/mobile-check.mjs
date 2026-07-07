@@ -226,7 +226,26 @@ const ROTEIRO_MOBILE = `(async () => {
   ok('Fundo destravado ao fechar', !document.body.classList.contains('mobile-sheet-open'));
   ok('aria-expanded=false ao fechar', btnAdd.getAttribute('aria-expanded') === 'false');
 
+  // 14. instalar app sempre disponível via Compartilhar → Instalar
+  const inst = document.getElementById('shareInstallOpt');
+  ok('Opção "Instalar" disponível no Compartilhar', !!inst && !inst.classList.contains('hidden'));
+
   localStorage.removeItem('pmgoEscalas');
+  return JSON.stringify(passos);
+})()`;
+
+/* iPhone: o Safari não dispara o evento nativo, então o banner de instalação
+   deve aparecer proativamente e a opção Instalar deve estar acessível. */
+const ROTEIRO_IOS = `(async () => {
+  const passos = [];
+  const ok = (nome, cond, detalhe = '') => passos.push({ nome, ok: !!cond, detalhe: String(detalhe) });
+  const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+  for (let i = 0; i < 50 && !document.getElementById('formEscala'); i++) await espera(100);
+  ok('iOS detectado como iPhone', /iphone/i.test(navigator.userAgent));
+  const banner = document.getElementById('pwaBanner');
+  ok('iOS: banner de instalação aparece no carregamento', !!banner && !banner.classList.contains('hidden'));
+  const inst = document.getElementById('shareInstallOpt');
+  ok('iOS: opção Instalar disponível', !!inst && !inst.classList.contains('hidden'));
   return JSON.stringify(passos);
 })()`;
 
@@ -278,6 +297,12 @@ try {
 
   await rodarViewport(cdp, sessionId, porta, 393, 852, ROTEIRO_MOBILE, 'Celular 393×852 (padrão Android)');
   await rodarViewport(cdp, sessionId, porta, 320, 568, ROTEIRO_320, 'Celular 320×568 (mínimo)');
+
+  /* iPhone: força o User-Agent de iOS para validar o fluxo de instalação do Safari. */
+  await cdp.enviar('Emulation.setUserAgentOverride', {
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  }, sessionId);
+  await rodarViewport(cdp, sessionId, porta, 390, 844, ROTEIRO_IOS, 'iPhone (instalação PWA)');
 
   console.log(falhou ? '\nVALIDAÇÃO MOBILE FALHOU.' : '\nVALIDAÇÃO MOBILE OK — todos os critérios atendidos.');
   process.exitCode = falhou ? 1 : 0;
