@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v44
+   Calculadora AC4 — v45
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
@@ -765,7 +765,7 @@ import {
      cards enxutos (mobile). A delegação em #listaEscalas trata ambos. */
   const botoesAcaoHTML = (id) => `
     <div class="escala-actions">
-      <button class="btn-icon gcal" data-acao="agenda" data-id="${id}" title="Adicionar ao Google Agenda" aria-label="Adicionar ao Google Agenda">
+      <button class="btn-icon gcal" data-acao="agenda" data-id="${id}" title="Adicionar esta escala à agenda" aria-label="Adicionar esta escala à agenda">
         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/></svg>
       </button>
       <button class="btn-icon" data-acao="duplicar" data-id="${id}" title="Duplicar para o dia seguinte" aria-label="Duplicar">
@@ -1015,23 +1015,23 @@ import {
     window.print();
   }
 
-  /* Botão principal da topbar — pergunta ao usuário e abre o Google Calendar */
-  async function abrirAgendaGoogle() {
+  /* Ação única de agenda: 1 escala abre Google Agenda; várias geram .ics. */
+  async function adicionarAgenda() {
     const lista = escalasOrdenadas();
     if (!lista.length) { toast('Adicione escalas antes de salvar na agenda.', { erro: true }); return; }
 
     if (lista.length > 1) {
       const okMulti = await dialogConfirmar(
-        `Gerar um arquivo .ics com as ${lista.length} escalas para importar no Google Agenda?`,
-        { textoOk: 'Gerar arquivo .ics', perigoso: false }
+        `Gerar um arquivo .ics com as ${lista.length} escalas para importar na agenda?`,
+        { textoOk: 'Gerar .ics', perigoso: false }
       );
       if (!okMulti) return;
       haptic(10);
-      baixarArquivoAgenda(lista, 'Arquivo .ics gerado com todas as escalas para o Google Agenda.');
+      baixarArquivoAgenda(lista, 'Arquivo .ics gerado com todas as escalas para importar na agenda.');
       return;
     }
 
-    const ok = await dialogConfirmar(`Deseja salvar a escala "${lista[0].descricao}" no Google Agenda?`, { textoOk: 'Abrir Google Agenda', perigoso: false });
+    const ok = await dialogConfirmar(`Deseja salvar a escala "${lista[0].descricao}" na agenda?`, { textoOk: 'Abrir agenda', perigoso: false });
     if (!ok) return;
 
     haptic(10);
@@ -1042,15 +1042,15 @@ import {
   function exportarICS() {
     const lista = escalasOrdenadas();
     if (!lista.length) { toast('Adicione escalas antes de gerar o arquivo .ics.', { erro: true }); return; }
-    baixarArquivoAgenda(lista, 'Arquivo gerado. Use "Importar" na Agenda Google.');
+    baixarArquivoAgenda(lista, 'Arquivo gerado. Use "Importar" no seu app de agenda.');
   }
 
   async function abrirAgendaGoogleItem(id) {
     const e = escalas.find((x) => x.id === id);
     if (!e) return;
     const ok = await dialogConfirmar(
-      `Deseja salvar a escala "${e.descricao}" no Google Agenda?`,
-      { textoOk: 'Abrir Google Agenda', perigoso: false }
+      `Deseja salvar a escala "${e.descricao}" na agenda?`,
+      { textoOk: 'Abrir agenda', perigoso: false }
     );
     if (!ok) return;
     haptic(10);
@@ -1241,7 +1241,7 @@ import {
     on('btnTheme', 'click', () =>
       aplicarTema(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
     on('btnPrint',     'click', imprimirRelatorio);
-    on('btnExportIcs', 'click', abrirAgendaGoogle);
+    on('btnExportIcs', 'click', adicionarAgenda);
     on('btnExportCsv', 'click', exportarCSV);
     on('btnShare',     'click', abrirShareSheet);
 
@@ -1272,17 +1272,7 @@ import {
     on('shareWA',     'click', () => { $('dialogShare')?.close(); compartilharWhatsApp(); });
     on('shareNative', 'click', () => { $('dialogShare')?.close(); compartilharNativo(); });
     on('shareCopy',   'click', () => { $('dialogShare')?.close(); copiarResumo(); });
-    on('shareGoogleOpt', 'click', () => {
-      $('dialogShare')?.close();
-      const lista = escalasOrdenadas();
-      if (!lista.length) { toast('Adicione escalas antes de compartilhar.', { erro: true }); return; }
-      if (lista.length === 1) {
-        abrirAgendaGoogleItem(lista[0].id);
-      } else {
-        baixarArquivoAgenda(lista, 'Arquivo .ics gerado com todas as escalas para o Google Agenda.');
-      }
-    });
-    on('shareIcsOpt', 'click', () => { $('dialogShare')?.close(); exportarICS(); });
+    on('shareIcsOpt', 'click', () => { $('dialogShare')?.close(); adicionarAgenda(); });
     on('shareCsvOpt', 'click', () => { $('dialogShare')?.close(); exportarCSV(); });
     on('sharePdfOpt', 'click', () => { $('dialogShare')?.close(); imprimirRelatorio(); });
     on('shareClose',  'click', () => $('dialogShare')?.close());

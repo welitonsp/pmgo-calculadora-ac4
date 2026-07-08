@@ -275,6 +275,7 @@ const ROTEIRO_MOBILE = `(async () => {
   ok('aria-expanded=false ao fechar', btnAdd.getAttribute('aria-expanded') === 'false');
 
   // 14. instalar app sempre disponível via Compartilhar → Instalar
+  ok('Compartilhar tem uma única opção de agenda', !document.getElementById('shareGoogleOpt') && !!document.getElementById('shareIcsOpt') && document.getElementById('shareIcsOpt').textContent.includes('Agenda'));
   const inst = document.getElementById('shareInstallOpt');
   ok('Opção "Instalar" disponível no Compartilhar', !!inst && !inst.classList.contains('hidden'));
 
