@@ -14,8 +14,8 @@
   <!-- Preload da fonte principal — reduz reflow/CLS do font-swap da Inter -->
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-  <link rel="stylesheet" href="css/styles.css?v=44">
-  <script src="js/theme.js?v=44"></script>
+  <link rel="stylesheet" href="css/styles.css?v=45">
+  <script src="js/theme.js?v=45"></script>
 </head>
 <body>
 
@@ -57,13 +57,13 @@
       </div>
       <div class="topbar-actions">
         <div class="agenda-action">
-          <button class="btn btn-primary btn-sm" id="btnExportIcs" title="Abre o Google Agenda para salvar a escala" aria-label="Adicionar escala ao Google Agenda">
+          <button class="btn btn-primary btn-sm" id="btnExportIcs" title="Adicionar escalas à agenda" aria-label="Adicionar escalas à agenda">
             <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/>
             </svg>
-            <span>Adicionar ao Google Agenda</span>
+            <span>Adicionar à agenda</span>
           </button>
-          <p>Clique para abrir o Google Agenda com os dados da escala já preenchidos.</p>
+          <p>Abre uma escala no Google Agenda ou exporta várias em .ics.</p>
         </div>
         <div class="topbar-secondary">
           <button class="btn btn-outline btn-sm" id="btnExportCsv" aria-label="Exportar planilha CSV">
@@ -326,7 +326,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v44 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v45 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -435,14 +435,6 @@
           </span>
           <span>Copiar</span>
         </button>
-        <button class="share-opt" id="shareGoogleOpt">
-          <span class="share-icon share-icon-gcal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
-              <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/>
-            </svg>
-          </span>
-          <span>Google</span>
-        </button>
         <button class="share-opt" id="shareIcsOpt">
           <span class="share-icon share-icon-ics">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
@@ -481,7 +473,7 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.js?v=44"></script>
+  <script type="module" src="js/app.js?v=45"></script>
 
   <!-- Relatório profissional de impressão — populado pelo JS antes de window.print() -->
   <section id="printReport">
