@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v50
+   Calculadora AC4 — v51
    ========================================================================== */
 
 /* Inter (variable, 100–900) self-hosted — sem dependência do Google Fonts,
@@ -966,6 +966,16 @@ textarea.control { min-height: 74px; resize: vertical; }
 }
 .agenda-prov-ico.google  { background: #e8f0fe; color: #1a73e8; }
 .agenda-prov-ico.outlook { background: #e0f0fb; color: #0f6cbd; }
+.agenda-prov-ico.ics     { background: var(--surface-3); color: var(--text-muted); }
+/* Alternativa (.ics): separada dos provedores diretos por um filete acima. */
+.agenda-prov--ics { margin-top: 4px; border-style: dashed; }
+.agenda-prov--ics::before {
+  content: '';
+  position: absolute;
+  top: -7px; left: 8px; right: 8px;
+  border-top: 1px solid var(--border);
+}
+.agenda-prov { position: relative; }
 .agenda-prov-txt small { display: block; color: var(--text-muted); font-weight: 600; font-size: 0.76rem; margin-top: 2px; }
 .agenda-hint { color: var(--text-muted); font-size: 0.84rem; margin: 0 0 10px; line-height: 1.4; }
 .agenda-lista { display: grid; gap: 8px; max-height: 40vh; overflow-y: auto; margin-bottom: 12px; }

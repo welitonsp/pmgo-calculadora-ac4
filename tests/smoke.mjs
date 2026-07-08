@@ -177,6 +177,17 @@ const ROTEIRO = `(async () => {
      document.querySelectorAll('#printReport .pr-table tbody tr').length === 1
        && document.getElementById('prTableWrap').innerHTML.includes('420,00'));
 
+  // 4d. agenda: a ação da linha abre o dialog de provedores (mesmo fluxo em celular e desktop)
+  document.querySelector('#listaEscalas [data-acao="agenda"]').click();
+  await espera(250);
+  const dlgAgenda = document.getElementById('dialogAgenda');
+  const provs = dlgAgenda.querySelectorAll('.agenda-prov');
+  ok('Agenda: dialog abre com provedores', dlgAgenda.open && provs.length === 4, provs.length + ' opções');
+  ok('Agenda: opção Google Agenda presente', !!dlgAgenda.querySelector('.agenda-prov[data-prov="google"]'));
+  ok('Agenda: alternativa .ics presente', !!dlgAgenda.querySelector('.agenda-prov--ics[data-prov="ics"]'));
+  dlgAgenda.close();
+  await espera(100);
+
   // 5. remoção limpa o estado
   document.querySelector('#listaEscalas [data-acao="remover"]').click();
   await espera(300);

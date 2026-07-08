@@ -4,6 +4,22 @@
 
 ---
 
+## Sessão de 08/07/2026 — reformulação do agendamento no celular (v51)
+
+### Problema relatado pelo gestor
+
+Em testes com celulares de colegas, o fluxo de "Agenda" no celular ficou **confuso e ruim**: tocava em Agenda → um confirm "Adicionar à agenda do celular?" → **baixava um `.ics`** → o PM tinha que sair do navegador, achar o arquivo em Downloads e abri-lo, e só então a agenda perguntava de novo. Muitos passos, sem feedback, e em vários Android o `.ics` nem abre a agenda sozinho.
+
+### O que foi feito (v51)
+
+- **Celular e desktop agora usam o MESMO dialog de provedores** (`abrirDialogAgenda`). No celular, tocar **Google Agenda** (ou Outlook) abre o evento **já pré-preenchido** — um toque em *Salvar*. Removidos o `dialogConfirmar` redundante e a função `agendarNoCelular` (`agendarEscalas` não ramifica mais por `isMobileViewport`).
+- **"Baixar arquivo (.ics)"** virou uma opção de rodapé no mesmo dialog (separada por filete tracejado), ideal para **Apple Calendar / Samsung / outras agendas** — preserva o comportamento antigo como alternativa, sem forçá-lo. Com N escalas, o `.ics` continua trazendo todas num arquivo só.
+- Cópia do hint do Google ajustada para "Abre com o evento pronto".
+- **Smoke ganhou 3 passos** (dialog abre com 4 opções; Google presente; alternativa `.ics` presente) — 15 passos no total, todos verdes. `run-tests` e `mobile-check` verdes.
+- **Decisão revista**: a decisão anterior (PR #27) de "no celular abrir a agenda padrão via `.ics`" mostrou-se ruim na prática e foi substituída pelo fluxo de link direto + `.ics` como alternativa.
+
+---
+
 ## Sessão de 08/07/2026 — testes de fronteira (v50)
 
 ### O que foi feito

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v50
+   Calculadora AC4 — v51
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
@@ -911,13 +911,12 @@ import {
   }
 
   /* ------------------------------------------------ agendamento
-     Mobile: entrega o evento (.ics) ao app de agenda padrão do aparelho —
-     seja Google, Samsung, Outlook ou outro configurado no sistema.
-     Desktop: dialog para abrir na agenda web da estação (Google/Outlook),
-     sem gerar arquivo. */
+     Celular e desktop usam o MESMO dialog de provedores: tocar em "Google
+     Agenda"/"Outlook" abre o evento já pré-preenchido (um toque em Salvar).
+     "Baixar .ics" fica como alternativa para outras agendas (Apple, Samsung). */
   const PROVEDORES_AGENDA = [
     {
-      id: 'google', nome: 'Google Agenda', hint: 'Abre no navegador',
+      id: 'google', nome: 'Google Agenda', hint: 'Abre com o evento pronto',
       classeIco: 'google',
       icone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="m9.5 14.5 2-2v5"/></svg>',
       link: (e) => gerarLinkGoogleAgenda(e),
@@ -936,23 +935,11 @@ import {
     },
   ];
 
-  async function agendarEscalas(lista) {
-    if (!lista.length) { toast('Adicione escalas antes de salvar na agenda.', { erro: true }); return; }
-    if (isMobileViewport()) { await agendarNoCelular(lista); return; }
-    abrirDialogAgenda(lista);
-  }
+  const ICONE_ICS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
 
-  /* Mobile: o .ics é o formato que o sistema roteia para a agenda padrão do
-     aparelho — ao abrir o arquivo, o Android/iOS usa o app que o PM configurou. */
-  async function agendarNoCelular(lista) {
-    const rotulo = lista.length === 1 ? `a escala "${lista[0].descricao}"` : `as ${lista.length} escalas`;
-    const ok = await dialogConfirmar(
-      `Adicionar ${rotulo} à agenda do celular?`,
-      { textoOk: 'Abrir agenda', perigoso: false }
-    );
-    if (!ok) return;
-    haptic(10);
-    baixarArquivoAgenda(lista, 'Toque no arquivo baixado para abrir na agenda do seu celular.');
+  function agendarEscalas(lista) {
+    if (!lista.length) { toast('Adicione escalas antes de salvar na agenda.', { erro: true }); return; }
+    abrirDialogAgenda(lista);
   }
 
   function abrirDialogAgenda(lista) {
@@ -965,18 +952,33 @@ import {
     dlg.showModal();
   }
 
+  /* Alternativa universal: baixa o .ics (Apple Calendar, Samsung, etc.).
+     No celular a mensagem orienta a abrir o arquivo; no desktop, a importar. */
+  function baixarIcsDaAgenda(lista) {
+    $('dialogAgenda')?.close();
+    baixarArquivoAgenda(lista, isMobileViewport()
+      ? 'Arquivo .ics gerado — toque nele (em Downloads) para abrir na agenda.'
+      : 'Arquivo .ics gerado para importar na sua agenda.');
+  }
+
   function montarOpcoesProvedor(lista) {
     const body = $('agendaBody');
-    body.innerHTML = PROVEDORES_AGENDA.map((p) => `
+    const provedores = PROVEDORES_AGENDA.map((p) => `
       <button class="agenda-prov" data-prov="${p.id}" type="button">
         <span class="agenda-prov-ico ${p.classeIco}" aria-hidden="true">${p.icone}</span>
         <span class="agenda-prov-txt">${p.nome}<small>${p.hint}</small></span>
       </button>`).join('');
+    body.innerHTML = `${provedores}
+      <button class="agenda-prov agenda-prov--ics" data-prov="ics" type="button">
+        <span class="agenda-prov-ico ics" aria-hidden="true">${ICONE_ICS}</span>
+        <span class="agenda-prov-txt">Baixar arquivo (.ics)<small>Apple, Samsung ou outra agenda</small></span>
+      </button>`;
     body.querySelectorAll('.agenda-prov').forEach((btn) => {
       btn.addEventListener('click', () => {
+        haptic(10);
+        if (btn.dataset.prov === 'ics') { baixarIcsDaAgenda(lista); return; }
         const prov = PROVEDORES_AGENDA.find((p) => p.id === btn.dataset.prov);
         if (!prov) return;
-        haptic(10);
         if (lista.length === 1) {
           window.open(prov.link(lista[0]), '_blank', 'noopener');
           $('dialogAgenda')?.close();
