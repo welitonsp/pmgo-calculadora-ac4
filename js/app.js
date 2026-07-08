@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v51
+   Calculadora AC4 — v52
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
@@ -31,6 +31,7 @@ import {
     config:    'pmgoConfig',
     theme:     'pmgoTheme',
     pwaBanner: 'pmgoPwaBanner',
+    erros:     'pmgoErros',
   };
 
   /* ------------------------------------------------------------ estado */
@@ -176,6 +177,49 @@ import {
     }
     region.appendChild(el);
     setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, acao ? 6000 : 3500);
+  }
+
+  /* ------------------------------------------------ observabilidade
+     Captura erros de JS não tratados e rejeições de Promise para (a) avisar o
+     usuário de forma discreta e (b) guardar um log anônimo local — máx. 20
+     entradas com horário, mensagem e origem do erro, SEM dados pessoais (não
+     registra conteúdo de campos). Ajuda a diagnosticar sem coletar nada em
+     servidor (LGPD por minimização). Inspecione com window.__ac4Erros() e
+     limpe com window.__ac4LimparErros(). */
+  const MAX_ERROS_LOG = 20;
+  let ultimoToastErroTs = 0;
+
+  function registrarErro(info) {
+    try {
+      const log = JSON.parse(localStorage.getItem(STORAGE.erros) || '[]');
+      log.push({ t: new Date().toISOString(), ...info });
+      while (log.length > MAX_ERROS_LOG) log.shift();
+      localStorage.setItem(STORAGE.erros, JSON.stringify(log));
+    } catch { /* localStorage cheio/indisponível — erro não pode gerar erro */ }
+    const agora = Date.now();
+    if (agora - ultimoToastErroTs > 10000) {
+      ultimoToastErroTs = agora;
+      try { toast('Ocorreu um erro inesperado. Se persistir, recarregue a página.', { erro: true }); } catch {}
+    }
+  }
+
+  function initObservabilidade() {
+    window.addEventListener('error', (ev) => {
+      registrarErro({
+        msg: String(ev.message || 'erro').slice(0, 200),
+        src: String(ev.filename || '').replace(location.origin, '').slice(0, 120),
+        ln: ev.lineno || 0, col: ev.colno || 0,
+      });
+    });
+    window.addEventListener('unhandledrejection', (ev) => {
+      const motivo = ev.reason;
+      registrarErro({
+        msg: String((motivo && (motivo.message || motivo)) || 'promise rejeitada').slice(0, 200),
+        src: 'unhandledrejection', ln: 0, col: 0,
+      });
+    });
+    window.__ac4Erros = () => { try { return JSON.parse(localStorage.getItem(STORAGE.erros) || '[]'); } catch { return []; } };
+    window.__ac4LimparErros = () => { localStorage.removeItem(STORAGE.erros); return 'log de erros limpo'; };
   }
 
   /* ---------------------------------------- dialog de confirmação */
@@ -1163,6 +1207,7 @@ import {
 
   /* -------------------------------------------------------------- init */
   function init() {
+    initObservabilidade();
     initTema();
     carregar();
     initPWA();

@@ -55,6 +55,13 @@ export const escalaAgendaValida = (e) => {
   return dataLocalValida(i) && dataLocalValida(f) && f > i;
 };
 
+/**
+ * Monta um arquivo iCalendar (RFC 5545) com um VEVENT por escala válida.
+ * @param {Array<Object>} lista Escalas a exportar.
+ * @param {Object} [tabelaVigente] Tabela usada no cálculo do valor no evento.
+ * @returns {{conteudo:string, eventos:number, ignoradas:number}}
+ *   `conteudo` é o `.ics` pronto; `ignoradas` conta escalas inválidas puladas.
+ */
 export function montarICS(lista, tabelaVigente = TABELA_OFICIAL) {
   const dtstamp = dataICS(new Date());
   const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', `PRODID:${ICS_PRODID}`, 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
@@ -99,7 +106,13 @@ export function parseDataICS(v) {
   return Number.isFinite(d.getTime()) ? d : null;
 }
 
-/* Valida a estrutura iCalendar gerada a partir de uma lista de escalas. */
+/**
+ * Valida a estrutura iCalendar gerada a partir de uma lista de escalas
+ * (CRLF, dobra de 75 octetos, cabeçalhos e campos obrigatórios de cada VEVENT).
+ * @param {Array<Object>} lista
+ * @param {Object} [tabelaVigente]
+ * @returns {{ok:boolean, eventos:number, ignoradas:number, falhas:string[]}}
+ */
 export function validarICS(lista, tabelaVigente = TABELA_OFICIAL) {
   const arquivo = montarICS(lista, tabelaVigente);
   const falhas = [];
@@ -149,8 +162,13 @@ function detalhesEventoAgenda(e, tabelaVigente) {
   return { titulo: e.descricao || `Servico Extra AC4 — ${tipo}`, corpo: linhas.join('\n') };
 }
 
-/* Monta a URL de link direto para o Google Calendar (1 evento por link).
-   Datas convertidas para UTC via dataICS() — fuso horário tratado corretamente. */
+/**
+ * Monta a URL de link direto para o Google Calendar (1 evento por link).
+ * Datas convertidas para UTC via `dataICS()` — fuso tratado corretamente.
+ * @param {Object} e Escala.
+ * @param {Object} [tabelaVigente]
+ * @returns {string} URL `calendar.google.com/render?...` com o evento pronto.
+ */
 export function gerarLinkGoogleAgenda(e, tabelaVigente = TABELA_OFICIAL) {
   const { titulo, corpo } = detalhesEventoAgenda(e, tabelaVigente);
   const params = new URLSearchParams({
@@ -162,9 +180,14 @@ export function gerarLinkGoogleAgenda(e, tabelaVigente = TABELA_OFICIAL) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-/* Monta a URL de link direto para o Outlook (1 evento por link).
-   corporativo=true usa o Outlook do Microsoft 365 (conta de trabalho);
-   false usa o Outlook.com pessoal. Datas em ISO 8601 UTC. */
+/**
+ * Monta a URL de link direto para o Outlook (1 evento por link).
+ * @param {Object} e Escala.
+ * @param {Object} [tabelaVigente]
+ * @param {boolean} [corporativo] `true` usa o Outlook do Microsoft 365 (conta
+ *   de trabalho, outlook.office.com); `false` usa o Outlook.com pessoal.
+ * @returns {string} URL `.../calendar/action/compose?...` com o evento pronto.
+ */
 export function gerarLinkOutlookAgenda(e, tabelaVigente = TABELA_OFICIAL, corporativo = false) {
   const { titulo, corpo } = detalhesEventoAgenda(e, tabelaVigente);
   const iso = (v) => {

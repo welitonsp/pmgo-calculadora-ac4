@@ -4,6 +4,32 @@
 
 ---
 
+## Sessão de 08/07/2026 — conclusão das fases pendentes P3/P4 (v52)
+
+Fechadas as pendências acionáveis do diário. Resta só a **P2 (uptime)**, que depende do gestor.
+
+### O que foi feito
+
+- **P3 — Otimização do ícone (RESOLVIDO):** `assets/icon-512.png` **121KB → 14KB (−88%)** e `icon-192.png` **20KB → 5,6KB (−73%)**, sem perda visual. Como a estação não tem pngquant/ImageMagick/sharp, criei `tools/optimize-icons.mjs`: rasteriza `assets/icon.svg` no Chrome headless, extrai os pixels e **codifica um PNG indexado (paleta ≤256 cores) usando só o `zlib` nativo do Node** — mesma técnica do pngquant, zero dependências. Reexecutável quando o SVG mudar.
+- **P3 — Testes de fronteira:** já concluído na v50 (5 casos em `__ac4Testes`).
+- **P3 — Acessibilidade documentada (RESOLVIDO):** auditoria de contraste WCAG 2.1 AA (15 pares) + checagem de DOM via Chrome, registrada em [`relatorio_acessibilidade_v52.md`](relatorio_acessibilidade_v52.md). Corrigidos os 2 contrastes falhos mais críticos com ajustes **imperceptíveis**: `--text-muted` claro `#66778c→#627286` (4,23→4,54:1) e `--text-faint` escuro `#71829a→#73859d` (4,42→4,59:1); `#dialogConfirm` ganhou `aria-label`. DOM: `lang`, `alt`, nomes de botões, rótulos de formulário, skip-link e live regions — tudo aprovado.
+- **P4 — `window.onerror` anônimo (RESOLVIDO):** handler global (`error` + `unhandledrejection`) em `app.js` (`initObservabilidade`) que avisa o usuário com toast discreto (throttle de 10s) e guarda um **log anônimo local** (`pmgoErros`, máx. 20 entradas: horário/mensagem/origem, **sem dados pessoais** — o origin é removido). Inspeção via `window.__ac4Erros()`, limpeza via `window.__ac4LimparErros()`. Coberto por 1 passo novo de smoke.
+- **P4 — JSDoc (RESOLVIDO):** adicionado às funções de contrato não óbvio dos módulos puros (`calculo.mjs` com `@typedef` de Escala/Tabela/ResultadoEscala; `formato.mjs` e `agenda.mjs` nos exports principais).
+- **Smoke: 16 passos** (novos: 3 de agenda na v51, 1 de observabilidade). `run-tests` e `mobile-check` verdes. Verificação visual desktop (tema claro) sem regressão.
+
+### Residuais menores (recomendação — dependem de decisão do gestor)
+
+- **`--text-faint` no tema claro (`#93a4b7`, 2,55:1):** falha AA, mas só em textos suplementares pequenos ("(opcional)", dicas). Corrigir pleno (~`#6b7886`) é **mudança visível** e reduz a hierarquia muted/faint — por isso não foi aplicado sem aprovação (regra: estética não muda sem pedido).
+- **Dois `<h1>`:** o segundo é o título do relatório de **impressão** (`display:none` em tela). Defensável; se quiser 100% no critério de headings, trocar por `<p>` estilizado.
+
+### Pendência que permanece
+
+| Prioridade | Item | Observação |
+| --- | --- | --- |
+| P2 | **Monitor de uptime externo** | Depende do gestor: criar conta gratuita (ex.: UptimeRobot), monitor HTTP para a URL pública, 5 min, alerta por e-mail. ~3 min. Não é código. |
+
+---
+
 ## Sessão de 08/07/2026 — reformulação do agendamento no celular (v51)
 
 ### Problema relatado pelo gestor

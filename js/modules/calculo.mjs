@@ -18,6 +18,33 @@ export const TABELA_OFICIAL = Object.freeze({
   valores: Object.freeze({ AD: 3000, AN: 3300, VD: 4000, VN: 4500 }),
 });
 
+/**
+ * @typedef {Object} Tabela Tabela de tarifas em centavos por hora.
+ * @property {string} portaria Norma de referência.
+ * @property {{AD:number, AN:number, VD:number, VN:number}} valores Centavos/hora por categoria.
+ */
+/**
+ * @typedef {Object} Escala Lançamento a calcular.
+ * @property {string} inicio Início no formato `datetime-local` (`YYYY-MM-DDTHH:mm`).
+ * @property {string} fim    Término no mesmo formato.
+ * @property {Tabela} [tabela] Tabela congelada no lançamento (preserva histórico).
+ */
+/**
+ * @typedef {Object} ResultadoEscala
+ * @property {number} mins Total de minutos da escala.
+ * @property {{AD:number, AN:number, VD:number, VN:number}} cont Minutos por categoria.
+ * @property {number} minDiurno Minutos diurnos (AD+VD).
+ * @property {number} minNoturno Minutos noturnos (AN+VN).
+ * @property {number} minVermelha Minutos em dia vermelho (VD+VN).
+ * @property {number} valorCentavos Valor total por PM, em centavos.
+ * @property {Tabela} tabela Tabela efetivamente usada no cálculo.
+ */
+
+/**
+ * Valida se uma tabela tem as quatro tarifas finitas e positivas.
+ * @param {Tabela} t
+ * @returns {boolean}
+ */
 export const tabelaEscalaValida = (t) =>
   t && t.valores && ['AD', 'AN', 'VD', 'VN'].every((k) => Number.isFinite(t.valores[k]) && t.valores[k] > 0);
 
@@ -27,9 +54,15 @@ function diaReferenciaOperacional(data, minutoDoDia, noturno) {
   return ref.getDay();
 }
 
-/* Calcula minutos por categoria e valor de uma escala.
-   Usa a tabela congelada no lançamento (e.tabela) quando válida — preserva o
-   histórico se a Portaria mudar; caso contrário usa a tabela vigente. */
+/**
+ * Calcula minutos por categoria (AD/AN/VD/VN) e o valor de uma escala,
+ * classificando minuto a minuto conforme a Portaria SSP nº 621/2026.
+ * Usa a tabela congelada no lançamento (`e.tabela`) quando válida — preserva o
+ * histórico se a Portaria mudar; caso contrário usa a tabela vigente.
+ * @param {Escala} e
+ * @param {Tabela} [tabelaVigente] Tabela usada quando `e.tabela` é inválida.
+ * @returns {ResultadoEscala}
+ */
 export function calcularEscala(e, tabelaVigente = TABELA_OFICIAL) {
   const ini = parseDateTimeLocal(e.inicio) || new Date(e.inicio);
   const fim = parseDateTimeLocal(e.fim) || new Date(e.fim);
@@ -59,7 +92,11 @@ export function calcularEscala(e, tabelaVigente = TABELA_OFICIAL) {
   };
 }
 
-/* Mapa de origem do remunerado → rótulo legível */
+/**
+ * Mapeia o código de origem do remunerado para um rótulo legível.
+ * @param {string} v Código (ex.: `'AC4'`, `'CONVENIO_ENEM'`).
+ * @returns {string} Rótulo amigável; `'AC4'` como padrão.
+ */
 export function labelOrigem(v) {
   return {
     AC4: 'AC4', AGETOP: 'AGETOP', DETRAN: 'DETRAN', PREFEITURAS: 'Prefeituras',

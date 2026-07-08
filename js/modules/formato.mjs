@@ -5,8 +5,18 @@
    ========================================================================== */
 
 const moedaBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+/**
+ * Formata centavos como moeda brasileira.
+ * @param {number} cent Valor em centavos.
+ * @returns {string} Ex.: `'R$ 485,00'`.
+ */
 export const fmtMoeda = (cent) => moedaBRL.format(cent / 100);
 
+/**
+ * Formata minutos como horas com minutos quando houver resto.
+ * @param {number} mins Total de minutos.
+ * @returns {string} Ex.: `'14h'`, `'7h30'`.
+ */
 export const fmtHoras = (mins) => {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -30,6 +40,13 @@ export const fmtHora = (iso) =>
 export const dataLocalValida = (date) =>
   date instanceof Date && Number.isFinite(date.getTime());
 
+/**
+ * Combina data (`YYYY-MM-DD`) e hora (`HH:mm`) num `Date` local, rejeitando
+ * datas inexistentes (ex.: 31/02) pela verificação de round-trip.
+ * @param {string} data
+ * @param {string} hora
+ * @returns {Date|null} `null` se o formato for inválido ou a data não existir.
+ */
 export function combinarDataHoraLocal(data, hora) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data || '') || !/^\d{2}:\d{2}$/.test(hora || '')) return null;
   const [ano, mes, dia] = data.split('-').map(Number);
@@ -45,6 +62,11 @@ export function combinarDataHoraLocal(data, hora) {
     : null;
 }
 
+/**
+ * Converte um valor `datetime-local` (`YYYY-MM-DDTHH:mm`) em `Date` local.
+ * @param {string} valor
+ * @returns {Date|null} `null` se ausente/ inválido.
+ */
 export function parseDateTimeLocal(valor) {
   if (!valor) return null;
   const [data, horaComSegundos = ''] = String(valor).split('T');
@@ -68,6 +90,12 @@ export const adicionarHoras = (date, horas) =>
     ? new Date(date.getTime() + Number(horas) * 3600000)
     : null;
 
+/**
+ * Calcula o término (`datetime-local`) somando `horas` ao início.
+ * @param {string} inicioValor Início em `datetime-local`.
+ * @param {number} horas Duração em horas (pode ser fracionária).
+ * @returns {string} Término em `datetime-local`, ou `''` se inválido.
+ */
 export const calcularTerminoPorDuracao = (inicioValor, horas) => {
   const inicio = parseDateTimeLocal(inicioValor);
   const fim = adicionarHoras(inicio, horas);
@@ -80,6 +108,14 @@ export const calcularTerminoPorDuracao = (inicioValor, horas) => {
    minuto a minuto em todo carregamento. */
 export const DURACAO_MAX_HORAS = 192;
 
+/**
+ * Valida o intervalo de uma escala (campos preenchidos, término posterior ao
+ * início e duração dentro do teto de {@link DURACAO_MAX_HORAS}).
+ * @param {string} inicioValor
+ * @param {string} fimValor
+ * @returns {{ok:boolean, campo?:('inicio'|'fim'), mensagem:string, inicio?:Date, fim?:Date}}
+ *   `campo` indica onde ancorar o erro na UI quando `ok` é `false`.
+ */
 export function validarIntervaloEscala(inicioValor, fimValor) {
   const inicio = parseDateTimeLocal(inicioValor);
   const fim = parseDateTimeLocal(fimValor);

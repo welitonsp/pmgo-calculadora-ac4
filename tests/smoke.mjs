@@ -188,6 +188,16 @@ const ROTEIRO = `(async () => {
   dlgAgenda.close();
   await espera(100);
 
+  // 4e. observabilidade: handler global captura erro anônimo no log local
+  localStorage.removeItem('pmgoErros');
+  window.dispatchEvent(new ErrorEvent('error', { message: 'erro-teste-smoke', filename: location.origin + '/x.js', lineno: 1, colno: 1 }));
+  await espera(50);
+  const erros = window.__ac4Erros();
+  ok('Observabilidade: erro anônimo registrado no log local',
+     Array.isArray(erros) && erros.length === 1 && erros[0].msg === 'erro-teste-smoke' && !JSON.stringify(erros[0]).includes(location.origin),
+     JSON.stringify(erros[0] || {}));
+  window.__ac4LimparErros();
+
   // 5. remoção limpa o estado
   document.querySelector('#listaEscalas [data-acao="remover"]').click();
   await espera(300);

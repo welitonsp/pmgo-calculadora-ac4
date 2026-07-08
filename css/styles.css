@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v51
+   Calculadora AC4 — v52
    ========================================================================== */
 
 /* Inter (variable, 100–900) self-hosted — sem dependência do Google Fonts,
@@ -44,7 +44,7 @@
   --border: #d9e2ec;
   --border-strong: #b9c8d8;
   --text: #122033;
-  --text-muted: #66778c;
+  --text-muted: #627286; /* AA: 4.54:1 sobre --bg (era #66778c, 4.23:1) */
   --text-faint: #93a4b7;
   --primary: var(--navy-900);
   --primary-hover: var(--navy-800);
@@ -95,7 +95,7 @@
   --border-strong: #38506e;
   --text: #e8eef7;
   --text-muted: #a5b4c7;
-  --text-faint: #71829a;
+  --text-faint: #73859d; /* AA: 4.59:1 sobre --surface escuro (era #71829a, 4.42:1) */
   --primary: #d6ad55;
   --primary-hover: #f2dd9b;
   --primary-soft: rgba(214, 173, 85, 0.14);
