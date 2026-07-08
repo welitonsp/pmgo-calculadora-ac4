@@ -273,9 +273,9 @@ import {
       add('Aceitar término maior que início', validarIntervaloEscala(inicio24, fim24).ok);
       add('Rejeitar término igual ao início', !validarIntervaloEscala(inicio24, inicio24).ok);
       add('Rejeitar término anterior ao início', !validarIntervaloEscala(fim24, inicio24).ok);
-      add('Aceitar duração no limite de 7 dias', validarIntervaloEscala('2026-07-05T08:00', '2026-07-12T08:00').ok);
+      add('Aceitar duração no limite de 192h', validarIntervaloEscala('2026-07-05T08:00', '2026-07-13T08:00').ok);
       const acimaLimite = validarIntervaloEscala('2026-07-05T08:00', '2036-07-05T08:00');
-      add('Rejeitar duração acima de 7 dias (typo de ano)', !acimaLimite.ok && acimaLimite.campo === 'fim', acimaLimite.mensagem);
+      add('Rejeitar duração acima de 192h (typo de ano)', !acimaLimite.ok && acimaLimite.campo === 'fim', acimaLimite.mensagem);
 
       const escalaTeste = {
         id: 'teste-lancamento-ac4',

@@ -215,6 +215,6 @@ O gestor forneceu o texto integral da **Portaria SSP nº 621, de 15/06/2026** (D
 
 **Observação de fronteira registrada:** o texto normativo ("diurno 5h01–21h59", "noturno 22h–5h") deixa o minuto das 5h00 e o intervalo 21h59–22h00 sem enquadramento literal contínuo; a aplicação usa a leitura contínua noturno=[22h00,05h00). Divergência máxima possível: 1 minuto por virada (≤ R$ 0,25/escala). Registrado em `docs/portaria-ssp-621-2026.md` como risco aceito.
 
-**P1-B — RESOLVIDO.** Teto de duração de **7 dias (168h)** implantado em `validarIntervaloEscala` (`js/modules/formato.mjs`, constante `DURACAO_MAX_HORAS`), valendo para o formulário e para a importação de `.ics` (eventos acima do teto são contados como ignorados). `calculo.mjs` intocado. Testes: 2 casos novos na suíte de lançamento (aceita exatamente 168h; rejeita typo de ano 2036) e a suíte `__ac4TestesLancamento` passou a rodar no smoke test do CI.
+**P1-B — RESOLVIDO.** Teto de duração de **192h** (limite de horas que o policial pode fazer, definido pelo gestor) implantado em `validarIntervaloEscala` (`js/modules/formato.mjs`, constante `DURACAO_MAX_HORAS`), valendo para o formulário e para a importação de `.ics` (eventos acima do teto são contados como ignorados). `calculo.mjs` intocado. Testes: 2 casos novos na suíte de lançamento (aceita exatamente 192h; rejeita typo de ano 2036) e a suíte `__ac4TestesLancamento` passou a rodar no smoke test do CI.
 
 Itens P2 seguintes do backlog (CSV injection, CI em PR, uptime) permanecem pendentes — ver §14.
