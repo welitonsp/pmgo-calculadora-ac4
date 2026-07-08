@@ -58,6 +58,5 @@ const rodar = (nome, fn) => {
 
 rodar('__ac4Testes (regras de cálculo AC4)', globalThis.__ac4Testes);
 rodar('__ac4TestesAgendamento (geração de .ics)', globalThis.__ac4TestesAgendamento);
-rodar('__ac4TestesImportacao (leitura de .ics)', globalThis.__ac4TestesImportacao);
 
 process.exit(falhou ? 1 : 0);

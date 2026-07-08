@@ -5,7 +5,7 @@
    ========================================================================== */
 import {
   fmtDataHora, fmtMoeda, fmtHoras, fmtHorasCheias,
-  parseDateTimeLocal, dataLocalValida, formatarDataHoraInput, combinarDataHoraLocal,
+  parseDateTimeLocal, dataLocalValida,
 } from './formato.mjs';
 import { calcularEscala, TABELA_OFICIAL } from './calculo.mjs';
 
@@ -125,69 +125,6 @@ export function validarICS(lista, tabelaVigente = TABELA_OFICIAL) {
     if (ini && fim && fim <= ini) falhas.push(`VEVENT ${i+1}: DTEND ≤ DTSTART.`);
   });
   return { ok: falhas.length === 0, eventos: eventos.length, ignoradas: arquivo.ignoradas, falhas };
-}
-
-/* ------------------------------------------------ importação de .ics */
-
-const desescaparTextoICS = (v) =>
-  String(v || '').replace(/\\(n|N|,|;|\\)/g, (m, c) => (c === 'n' || c === 'N' ? '\n' : c));
-
-/* Converte um valor DTSTART/DTEND para o formato datetime-local.
-   Suporta UTC (sufixo Z, convertido para o fuso local), data-hora flutuante
-   e TZID (tratado como hora local). Eventos de dia inteiro (VALUE=DATE)
-   retornam null — não têm horário e não servem para o cálculo AC4. */
-function converterDataICSLocal(campo) {
-  if (!campo) return null;
-  if (/VALUE=DATE(;|$)/i.test(campo.params || '')) return null;
-  const v = String(campo.valor || '').trim();
-  let m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?Z$/.exec(v);
-  if (m) {
-    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)));
-    return dataLocalValida(d) ? formatarDataHoraInput(d) : null;
-  }
-  m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?$/.exec(v);
-  if (m) {
-    const d = combinarDataHoraLocal(`${m[1]}-${m[2]}-${m[3]}`, `${m[4]}:${m[5]}`);
-    return d ? formatarDataHoraInput(d) : null;
-  }
-  return null;
-}
-
-/* Lê um arquivo iCalendar e extrai os eventos com data e hora válidas.
-   Retorna { eventos: [{ inicio, fim, resumo }], ignorados } — inicio/fim
-   no formato datetime-local, prontos para virar escala. */
-export function parseICS(conteudo) {
-  const linhas = desdobrarLinhasICS(String(conteudo || '').replace(/\r?\n/g, '\r\n'));
-  const eventos = [];
-  let ignorados = 0;
-  let atual = null;
-  linhas.forEach((l) => {
-    if (l === 'BEGIN:VEVENT') { atual = {}; return; }
-    if (l === 'END:VEVENT') {
-      if (atual) {
-        const inicio = converterDataICSLocal(atual.DTSTART);
-        const fim = converterDataICSLocal(atual.DTEND);
-        const iniDate = parseDateTimeLocal(inicio);
-        const fimDate = parseDateTimeLocal(fim);
-        if (iniDate && fimDate && fimDate > iniDate) {
-          eventos.push({ inicio, fim, resumo: desescaparTextoICS(atual.SUMMARY?.valor).replace(/\n/g, ' ').trim() });
-        } else {
-          ignorados++;
-        }
-      }
-      atual = null;
-      return;
-    }
-    if (!atual) return;
-    const idx = l.indexOf(':');
-    if (idx < 0) return;
-    const [nomeCompleto, valor] = [l.slice(0, idx), l.slice(idx + 1)];
-    const [nome, ...params] = nomeCompleto.split(';');
-    if (['DTSTART', 'DTEND', 'SUMMARY'].includes(nome)) {
-      atual[nome] = { valor, params: params.join(';') };
-    }
-  });
-  return { eventos, ignorados };
 }
 
 /* Título e corpo do evento — compartilhados pelos links de agenda web. */

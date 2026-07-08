@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v47
+   Calculadora AC4 — v48
    ========================================================================== */
 
 /* Inter (variable, 100–900) self-hosted — sem dependência do Google Fonts,
@@ -990,49 +990,6 @@ textarea.control { min-height: 74px; resize: vertical; }
 /* ===== PRINT ===== */
 .print-only { display: none; }
 #printReport { display: none; }
-
-/* ===== IMPORTAÇÃO DE AGENDA (.ics) ===== */
-.import-dialog { width: min(580px, calc(100vw - 32px)); }
-.import-title { margin: 0 0 4px; font-size: 1.05rem; }
-.import-hint { margin: 0 0 12px; color: var(--text-muted); font-size: 0.82rem; }
-.import-filtros {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 12px;
-  margin-bottom: 12px;
-}
-.import-field-kw { grid-column: 1 / -1; }
-.import-status { margin: 0 0 8px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
-.import-lista {
-  display: grid;
-  gap: 6px;
-  max-height: 42vh;
-  overflow: auto;
-  margin-bottom: 14px;
-}
-.import-item {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  cursor: pointer;
-}
-.import-item input[type="checkbox"] {
-  margin-top: 3px;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-  accent-color: var(--gold-500);
-}
-.import-item .t { font-weight: 700; font-size: 0.85rem; }
-.import-item .d { color: var(--text-muted); font-size: 0.78rem; }
-.import-item.fora { opacity: 0.55; }
-@media (max-width: 560px) {
-  .import-filtros { grid-template-columns: 1fr; }
-}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1180px) {

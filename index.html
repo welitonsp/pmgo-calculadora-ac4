@@ -14,8 +14,8 @@
   <!-- Preload da fonte principal — reduz reflow/CLS do font-swap da Inter -->
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-  <link rel="stylesheet" href="css/styles.css?v=47">
-  <script src="js/theme.js?v=47"></script>
+  <link rel="stylesheet" href="css/styles.css?v=48">
+  <script src="js/theme.js?v=48"></script>
 </head>
 <body>
 
@@ -317,7 +317,7 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v47 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v48 &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -347,35 +347,6 @@
 
   <!-- Toasts -->
   <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
-
-  <!-- Importação de agenda (.ics) -->
-  <input type="file" id="impArquivo" accept=".ics,text/calendar" class="hidden" aria-hidden="true">
-  <dialog class="confirm-dialog import-dialog" id="dialogImport" aria-modal="true" aria-label="Importar agenda">
-    <div class="dialog-body">
-      <h3 class="import-title">Importar agenda (.ics)</h3>
-      <p class="import-hint">Confira os eventos encontrados no arquivo. Use os filtros para pré-selecionar e desmarque o que não deseja importar.</p>
-      <div class="import-filtros">
-        <div class="field">
-          <label for="impDataIni">De</label>
-          <input type="date" class="control" id="impDataIni">
-        </div>
-        <div class="field">
-          <label for="impDataFim">Até</label>
-          <input type="date" class="control" id="impDataFim">
-        </div>
-        <div class="field import-field-kw">
-          <label for="impPalavras">Palavras-chave (separadas por vírgula)</label>
-          <input type="text" class="control" id="impPalavras" value="AC4, extra, escala, serviço">
-        </div>
-      </div>
-      <p class="import-status" id="impStatus" role="status"></p>
-      <div class="import-lista" id="impLista"></div>
-      <div class="dialog-actions">
-        <button class="btn btn-ghost" id="impCancelar">Cancelar</button>
-        <button class="btn btn-primary" id="impConfirmar">Importar selecionadas</button>
-      </div>
-    </div>
-  </dialog>
 
   <!-- Dialog de confirmação -->
   <dialog class="confirm-dialog" id="dialogConfirm" aria-modal="true">
@@ -476,7 +447,7 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.js?v=47"></script>
+  <script type="module" src="js/app.js?v=48"></script>
 
   <!-- Relatório profissional de impressão — populado pelo JS antes de window.print() -->
   <section id="printReport">

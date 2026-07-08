@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v47
+   Calculadora AC4 — v48
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
@@ -13,7 +13,7 @@ import {
   calcularEscala as calcularEscalaBase,
 } from './modules/calculo.mjs';
 import {
-  ICS_DOMAIN, dataICS, desdobrarLinhasICS, parseICS,
+  ICS_DOMAIN, dataICS, desdobrarLinhasICS,
   montarICS as montarICSBase,
   validarICS as validarICSBase,
   gerarLinkGoogleAgenda as gerarLinkGoogleAgendaBase,
@@ -25,13 +25,6 @@ import {
 
   const $ = (id) => document.getElementById(id);
   const on = (id, evt, fn) => { const el = $(id); if (el) el.addEventListener(evt, fn); };
-
-  /* Adia execução até parar de disparar por `ms` — usado em campos de digitação
-     para não recalcular/re-renderizar a cada tecla (melhora INP). */
-  const debounce = (fn, ms = 200) => {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-  };
 
   const STORAGE = {
     escalas:   'pmgoEscalas',
@@ -656,120 +649,6 @@ import {
     dlg.showModal();
   }
 
-  /* ------------------------------------------------- importação de .ics */
-  let importEventos = [];
-
-  const normalizarBusca = (s) =>
-    String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-
-  function eventoPreSelecionado(ev) {
-    const de  = $('impDataIni')?.value || '';
-    const ate = $('impDataFim')?.value || '';
-    const dia = ev.inicio.slice(0, 10);
-    if (de && dia < de) return false;
-    if (ate && dia > ate) return false;
-    const palavras = ($('impPalavras')?.value || '')
-      .split(',').map((p) => normalizarBusca(p.trim())).filter(Boolean);
-    if (!palavras.length) return true;
-    const alvo = normalizarBusca(ev.resumo);
-    return palavras.some((p) => alvo.includes(p));
-  }
-
-  function atualizarListaImportacao() {
-    const lista = $('impLista');
-    if (!lista) return;
-    lista.innerHTML = importEventos.map((ev, i) => {
-      const marcado = eventoPreSelecionado(ev);
-      const r = calcularEscala({ inicio: ev.inicio, fim: ev.fim });
-      return `
-        <label class="import-item${marcado ? '' : ' fora'}">
-          <input type="checkbox" data-idx="${i}" ${marcado ? 'checked' : ''}>
-          <span>
-            <span class="t">${escapeHTML(ev.resumo || 'Evento sem título')}</span><br>
-            <span class="d">${fmtDataHora(ev.inicio)} → ${fmtDataHora(ev.fim)} · ${fmtHoras(r.mins)} · ${fmtMoeda(r.valorCentavos)}</span>
-          </span>
-        </label>`;
-    }).join('');
-    atualizarStatusImportacao();
-    lista.querySelectorAll('input[type="checkbox"]').forEach((c) =>
-      c.addEventListener('change', atualizarStatusImportacao));
-  }
-
-  function atualizarStatusImportacao() {
-    const marcados = document.querySelectorAll('#impLista input:checked').length;
-    if ($('impStatus')) $('impStatus').textContent =
-      `${marcados} de ${importEventos.length} evento${importEventos.length === 1 ? '' : 's'} selecionado${marcados === 1 ? '' : 's'}.`;
-  }
-
-  function confirmarImportacao() {
-    const marcados = [...document.querySelectorAll('#impLista input:checked')]
-      .map((c) => importEventos[Number(c.dataset.idx)]).filter(Boolean);
-    if (!marcados.length) { toast('Selecione ao menos um evento para importar.', { erro: true }); return; }
-    const tabelaAtual = validarTabelaAtual();
-    if (!tabelaAtual) return;
-
-    const existentes = new Set(escalas.map((e) => `${e.inicio}|${e.fim}`));
-    let novos = 0, duplicados = 0;
-    marcados.forEach((ev) => {
-      const chave = `${ev.inicio}|${ev.fim}`;
-      if (existentes.has(chave)) { duplicados++; return; }
-      existentes.add(chave);
-      escalas.push({
-        id: Date.now() + Math.random(),
-        inicio: ev.inicio,
-        fim: ev.fim,
-        descricao: (ev.resumo || '').slice(0, 80) || 'Escala AC4',
-        origem: 'AC4',
-        qtdPm: 1,
-        tabela: tabelaAtual,
-      });
-      novos++;
-    });
-
-    $('dialogImport')?.close();
-    haptic([10, 30, 10]);
-    salvar(); render();
-    const extra = duplicados ? ` ${duplicados} já existia${duplicados === 1 ? '' : 'm'} e fo${duplicados === 1 ? 'i' : 'ram'} ignorada${duplicados === 1 ? '' : 's'}.` : '';
-    toast(`${novos} escala${novos === 1 ? '' : 's'} importada${novos === 1 ? '' : 's'} da agenda.${extra}`);
-  }
-
-  async function lerArquivoImportacao() {
-    const arquivo = $('impArquivo')?.files?.[0];
-    if (!arquivo) return;
-    try {
-      const lido = parseICS(await arquivo.text());
-      /* Mesmo teto de duração do formulário — evento com intervalo absurdo
-         (typo de ano na agenda de origem) travaria o cálculo minuto a minuto. */
-      const eventos = lido.eventos.filter((ev) => validarIntervaloEscala(ev.inicio, ev.fim).ok);
-      const ignorados = lido.ignorados + (lido.eventos.length - eventos.length);
-      if (!eventos.length) {
-        toast(`Nenhum evento com data e hora válidas no arquivo.${ignorados ? ` (${ignorados} sem horário ou inválidos)` : ''}`, { erro: true });
-        return;
-      }
-      importEventos = eventos.sort((a, b) => (a.inicio < b.inicio ? -1 : 1));
-      atualizarListaImportacao();
-      if (ignorados) toast(`${ignorados} evento${ignorados === 1 ? '' : 's'} sem horário fo${ignorados === 1 ? 'i' : 'ram'} ignorado${ignorados === 1 ? '' : 's'} (dia inteiro ou inválido).`);
-      $('dialogImport')?.showModal();
-    } catch {
-      toast('Não foi possível ler o arquivo. Confira se é um .ics válido.', { erro: true });
-    }
-  }
-
-  function initImportacao() {
-    on('btnImportIcs', 'click', () => { if ($('impArquivo')) { $('impArquivo').value = ''; $('impArquivo').click(); } });
-    on('impArquivo', 'change', lerArquivoImportacao);
-    on('impConfirmar', 'click', confirmarImportacao);
-    on('impCancelar', 'click', () => $('dialogImport')?.close());
-    /* `input` dispara a cada tecla e cada chamada recalcula todos os eventos —
-       com debounce só reconstrói quando o usuário pausa. `change` (blur/datas)
-       segue imediato. */
-    const atualizarListaDebounced = debounce(atualizarListaImportacao, 200);
-    ['impDataIni', 'impDataFim', 'impPalavras'].forEach((id) => {
-      on(id, 'input', atualizarListaDebounced);
-      on(id, 'change', atualizarListaImportacao);
-    });
-  }
-
   /* Botões de ação de uma escala — reusados na tabela (desktop) e nos
      cards enxutos (mobile). A delegação em #listaEscalas trata ambos. */
   const botoesAcaoHTML = (id) => `
@@ -1130,6 +1009,9 @@ import {
     if (!lista.length) { toast('Adicione escalas antes de exportar CSV.', { erro: true }); return; }
     const sep = ';';
     const num = (cent) => (cent / 100).toFixed(2).replace('.', ',');
+    /* Campos de texto livre passam por csvTextoSeguro antes das aspas —
+       impede que "=..." digitado na Unidade vire fórmula no Excel. */
+    const celTexto = (s) => `"${csvTextoSeguro(s).replace(/"/g, '""')}"`;
     const linhas = [['Unidade', 'Origem', 'Início', 'Término', 'Qtd. PM', 'Horas', 'H. diurnas', 'H. noturnas', 'Portaria', 'Valor/PM (R$)', 'Valor total (R$)'].join(sep)];
     let total = 0;
     lista.forEach((e) => {
@@ -1138,14 +1020,14 @@ import {
       const valorTotal = r.valorCentavos * qtd;
       total += valorTotal;
       linhas.push([
-        `"${(e.descricao || 'Escala AC4').replace(/"/g, '""')}"`,
-        `"${(e.origem || 'AC4').replace(/"/g, '""')}"`,
+        celTexto(e.descricao || 'Escala AC4'),
+        celTexto(e.origem || 'AC4'),
         fmtDataHora(e.inicio), fmtDataHora(e.fim),
         qtd,
         (r.mins / 60).toFixed(2).replace('.', ','),
         (r.minDiurno  / 60).toFixed(2).replace('.', ','),
         (r.minNoturno / 60).toFixed(2).replace('.', ','),
-        `"${(r.tabela.portaria || '').replace(/"/g, '""')}"`,
+        celTexto(r.tabela.portaria || ''),
         num(r.valorCentavos),
         num(valorTotal),
       ].join(sep));
@@ -1210,42 +1092,6 @@ import {
     ];
     if (console.table) console.table(resultados);
     return resultados.every((r) => r.ok) ? 'TODOS OS TESTES DE AGENDAMENTO OK' : resultados;
-  };
-
-  window.__ac4TestesImportacao = function () {
-    const fixture = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Teste//PT-BR',
-      // 1. flutuante (hora local) com vírgula escapada no SUMMARY
-      'BEGIN:VEVENT', 'UID:imp-1@teste', 'DTSTAMP:20260701T000000Z',
-      'DTSTART:20260810T180000', 'DTEND:20260811T080000',
-      'SUMMARY:Extra AC4 - Est\\, dio', 'END:VEVENT',
-      // 2. UTC (sufixo Z) — deve converter para o fuso local
-      'BEGIN:VEVENT', 'UID:imp-2@teste', 'DTSTAMP:20260701T000000Z',
-      'DTSTART:20260812T210000Z', 'DTEND:20260813T090000Z',
-      'SUMMARY:Plantao escala', 'END:VEVENT',
-      // 3. dia inteiro (VALUE=DATE) — deve ser ignorado
-      'BEGIN:VEVENT', 'UID:imp-3@teste', 'DTSTAMP:20260701T000000Z',
-      'DTSTART;VALUE=DATE:20260815', 'DTEND;VALUE=DATE:20260816',
-      'SUMMARY:Feriado', 'END:VEVENT',
-      // 4. término antes do início — deve ser ignorado
-      'BEGIN:VEVENT', 'UID:imp-4@teste', 'DTSTAMP:20260701T000000Z',
-      'DTSTART:20260820T100000', 'DTEND:20260820T080000',
-      'SUMMARY:Invalido', 'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-
-    const { eventos, ignorados } = parseICS(fixture);
-    const utcIni = toInputLocal(new Date(Date.UTC(2026, 7, 12, 21, 0)));
-    const utcFim = toInputLocal(new Date(Date.UTC(2026, 7, 13, 9, 0)));
-    const resultados = [
-      { caso: 'Extrai 2 eventos válidos e ignora 2', ok: eventos.length === 2 && ignorados === 2 },
-      { caso: 'Evento flutuante mantém hora local', ok: eventos[0]?.inicio === '2026-08-10T18:00' && eventos[0]?.fim === '2026-08-11T08:00' },
-      { caso: 'SUMMARY desescapado corretamente', ok: eventos[0]?.resumo === 'Extra AC4 - Est, dio' },
-      { caso: 'Evento UTC convertido para fuso local', ok: eventos[1]?.inicio === utcIni && eventos[1]?.fim === utcFim },
-      { caso: 'Evento importado gera escala calculável', ok: calcularEscala({ inicio: eventos[0].inicio, fim: eventos[0].fim }).mins === 14 * 60 },
-    ];
-    if (console.table) console.table(resultados);
-    return resultados.every((r) => r.ok) ? 'TODOS OS TESTES DE IMPORTACAO OK' : resultados;
   };
 
   /* -------------------------------------------- PWA install prompt */
@@ -1362,7 +1208,6 @@ import {
 
     on('btnClearAll', 'click', limparTudo);
     on('filtroMes', 'change', () => { filtroMes = $('filtroMes')?.value || ''; render(); });
-    initImportacao();
 
     const aplicarDuracao = () => {
       const horas = Number($('escalaDuracao')?.value || 0);

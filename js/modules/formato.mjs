@@ -103,6 +103,12 @@ export const fmtMesRef = (yyyymm) => {
   return label[0].toUpperCase() + label.slice(1);
 };
 
+/* Neutraliza injeção de fórmula em planilhas (CSV injection): o Excel executa
+   células iniciadas por = + - @ como fórmula mesmo entre aspas. O apóstrofo
+   inicial força o Excel a tratar o conteúdo como texto literal. */
+export const csvTextoSeguro = (s) =>
+  (/^[=+\-@\t\r]/.test(String(s)) ? `'${s}` : String(s));
+
 export const escapeHTML = (s) =>
   String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

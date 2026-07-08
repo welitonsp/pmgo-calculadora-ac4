@@ -23,8 +23,7 @@ Em dispositivos móveis, é possível usar a opção do navegador para adicionar
 - Consolidação de total de horas, quantidade de escalas e valor estimado.
 - Filtro por mês quando houver escalas em períodos diferentes.
 - Edição, duplicação e exclusão de escalas lançadas.
-- Exportação de agenda em `.ics`, compatível com importação manual em aplicativos de agenda, especialmente Google Agenda.
-- Importação de agenda por arquivo `.ics`, com filtros por data e palavras-chave e tela de revisão antes de consolidar.
+- Adição de escalas à agenda: no celular abre o aplicativo de agenda padrão do aparelho (via `.ics`); no computador abre a agenda web escolhida (Google Agenda ou Outlook).
 - Exportação de planilha em `.csv`.
 - Geração de relatório em PDF pela função de impressão do navegador.
 - Tema claro/escuro com persistência da preferência do usuário.
