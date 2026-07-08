@@ -4,6 +4,29 @@
 
 ---
 
+## Sessão de 08/07/2026 — testes de fronteira (v50)
+
+### O que foi feito
+
+- **P3 resolvido — Testes de fronteira do cálculo** (§10 da auditoria): adicionados 5 casos novos a `window.__ac4Testes` (`js/app.js`), todos verdes:
+  - Fronteira dom→seg cruzando 05h (dom 20h→seg 08h): 3h AD, 2h VD, 7h VN → R$ 485,00.
+  - Escala de **1 minuto**: 1 min AD → R$ 0,50.
+  - **Término 00:00** (seg 22h→ter 00:00): 2h AN → R$ 66,00 (o minuto do término não é contado — intervalo semiaberto).
+  - **Bissexto** ter 29/02/2028 08h→18h: 10h AD → R$ 300,00.
+  - Vermelha na madrugada (sex 22h→sáb 06h): 1h VD, 7h VN → R$ 355,00.
+  - Valores derivados das regras da Portaria 621/2026 **e** conferidos contra `calculo.mjs` antes de fixados. `calculo.mjs` **não foi alterado**.
+- Versão bumpada para **v50** (`node tools/bump-version.mjs 50`).
+- Testes locais: `run-tests` (agora 10 casos de cálculo + 7 de agendamento) e `smoke` (12 passos, PDF 73KB) — todos verdes.
+
+### Pendências que seguem abertas
+
+- **P2 — Monitor de uptime externo**: continua dependendo do gestor (criar conta UptimeRobot etc.). Nada a fazer no código.
+- **P3 — Otimizar `assets/icon-512.png` (~121KB)**: ainda bloqueado por tooling — esta estação não tem pngquant/ImageMagick/sharp nem projeto npm. (O `convert` do PATH é o do Windows, não ImageMagick.)
+- **P3 — Lighthouse a11y documentado**: não executado nesta sessão.
+- **P4 — JSDoc / `window.onerror` anônimo**: não executado nesta sessão.
+
+---
+
 ## Sessão de 07/07/2026 — encerramento
 
 ### Estado ao encerrar
