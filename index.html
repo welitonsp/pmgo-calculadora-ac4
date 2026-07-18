@@ -14,8 +14,8 @@
   <!-- Preload da fonte principal — reduz reflow/CLS do font-swap da Inter -->
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-  <link rel="stylesheet" href="css/styles.css?v=56">
-  <script src="js/theme.js?v=56"></script>
+  <link rel="stylesheet" href="css/styles.css?v=57">
+  <script src="js/theme.js?v=57"></script>
 </head>
 <body>
 
@@ -350,8 +350,9 @@
         &copy; <span class="footer-year"></span> Weliton Pinheiro &mdash; Todos os direitos reservados.
       </p>
       <p class="site-footer-meta">
-        Calculadora AC4 &middot; PMGO &middot; v56 &middot;
+        Calculadora AC4 &middot; PMGO &middot; v57 &middot;
         <a href="#" id="footerPrivacidade" class="footer-link">Privacidade</a> &middot;
+        <a href="#" id="footerFeedback" class="footer-link">Feedback</a> &middot;
         <a href="https://github.com/calculadora-ac4-pmgo" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
       </p>
     </div>
@@ -395,6 +396,37 @@
       <div class="dialog-actions">
         <button class="btn btn-primary" id="privacidadeFechar">Entendi</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Canal de feedback — elogios e sugestões por e-mail, sem servidor e sem
+       coleta: a mensagem abre no aplicativo de e-mail do próprio usuário. -->
+  <dialog class="confirm-dialog feedback-dialog" id="dialogFeedback" aria-modal="true" aria-label="Enviar feedback">
+    <div class="dialog-body">
+      <h3 class="agenda-title">Sua opinião melhora a calculadora</h3>
+      <p class="agenda-sub">Escolha o tipo, escreva a mensagem e envie pelo seu aplicativo de e-mail.</p>
+      <div class="fb-tipos" id="fbTipos" role="group" aria-label="Tipo de mensagem">
+        <button type="button" class="fb-tipo is-active" data-tipo="Elogio" aria-pressed="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+          <span>Elogio</span>
+        </button>
+        <button type="button" class="fb-tipo" data-tipo="Sugestão" aria-pressed="false">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>
+          <span>Sugestão</span>
+        </button>
+        <button type="button" class="fb-tipo" data-tipo="Problema" aria-pressed="false">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M17.47 9c1.93-.2 3.53-1.9 3.53-4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>
+          <span>Problema</span>
+        </button>
+      </div>
+      <label class="fb-label" for="fbMensagem">Mensagem</label>
+      <textarea class="control fb-textarea" id="fbMensagem" rows="5" maxlength="1000" placeholder="Conte o que funcionou bem ou o que pode melhorar…"></textarea>
+      <p class="fb-hint">A mensagem sai do seu próprio e-mail — o site não coleta nem armazena nada.</p>
+      <div class="dialog-actions fb-actions">
+        <button class="btn btn-ghost" id="fbFechar" type="button">Cancelar</button>
+        <button class="btn btn-primary" id="fbEnviar" type="button">Enviar por e-mail</button>
+      </div>
+      <button class="fb-copy" id="fbCopiarEmail" type="button">Sem app de e-mail? Copiar endereço</button>
     </div>
   </dialog>
 
@@ -497,7 +529,7 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.js?v=56"></script>
+  <script type="module" src="js/app.js?v=57"></script>
 
   <!-- Relatório profissional de impressão — populado pelo JS antes de window.print() -->
   <section id="printReport">

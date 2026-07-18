@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v56
+   Calculadora AC4 — v57
    Módulo principal: estado, UI, persistência e exportações.
    Regras de negócio, formatação e agenda vivem em js/modules/.
    ========================================================================== */
@@ -30,7 +30,7 @@ import {
   /* Versão da aplicação (sincronizada pelo tools/bump-version.mjs). Serve para
      carimbar o log de erros e detectar clientes presos em cache antigo:
      se __ac4Version no console divergir do rodapé/CHANGELOG, o SW não atualizou. */
-  const APP_VERSION = '56';
+  const APP_VERSION = '57';
 
   const STORAGE = {
     escalas:   'pmgoEscalas',
@@ -814,6 +814,60 @@ import {
     dlg.showModal();
   }
 
+  /* ------------------------------------------------ canal de feedback
+     Elogios/sugestões/problemas vão direto ao mantenedor por e-mail, SEM
+     backend e SEM coleta: o mailto abre no aplicativo do próprio usuário,
+     que decide enviar. Coerente com a política de privacidade do app. */
+  const FEEDBACK_EMAIL = 'welitonsp@gmail.com';
+  let feedbackTipo = 'Elogio';
+
+  const montarMailtoFeedback = (tipo, mensagem) => {
+    const assunto = `[Calculadora AC4] ${tipo}`;
+    const corpo = `${mensagem}\n\n—\nTipo: ${tipo}\nCalculadora AC4 v${APP_VERSION} · enviado pelo canal de feedback do app`;
+    return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+  };
+  /* Exposto para o smoke test validar o link sem navegar para fora da página. */
+  window.__ac4MailtoFeedback = montarMailtoFeedback;
+
+  function selecionarTipoFeedback(botao) {
+    feedbackTipo = botao.dataset.tipo || 'Elogio';
+    document.querySelectorAll('#fbTipos .fb-tipo').forEach((b) => {
+      const ativo = b === botao;
+      b.classList.toggle('is-active', ativo);
+      b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+  }
+
+  function enviarFeedback() {
+    const mensagem = ($('fbMensagem')?.value || '').trim();
+    if (mensagem.length < 5) {
+      toast('Escreva sua mensagem antes de enviar.', { erro: true });
+      $('fbMensagem')?.focus();
+      return;
+    }
+    haptic(10);
+    window.location.href = montarMailtoFeedback(feedbackTipo, mensagem);
+    $('dialogFeedback')?.close();
+    toast('Abrindo seu aplicativo de e-mail…');
+  }
+
+  async function copiarEmailFeedback() {
+    try {
+      await navigator.clipboard.writeText(FEEDBACK_EMAIL);
+      toast(`E-mail copiado: ${FEEDBACK_EMAIL}`);
+    } catch { toast(`Envie para: ${FEEDBACK_EMAIL}`, { erro: false }); }
+  }
+
+  function initFeedback() {
+    on('footerFeedback', 'click', (ev) => { ev.preventDefault(); $('dialogFeedback')?.showModal(); });
+    on('fbFechar', 'click', () => $('dialogFeedback')?.close());
+    on('fbEnviar', 'click', enviarFeedback);
+    on('fbCopiarEmail', 'click', copiarEmailFeedback);
+    document.querySelectorAll('#fbTipos .fb-tipo').forEach((b) => {
+      b.addEventListener('click', () => selecionarTipoFeedback(b));
+    });
+  }
+
   /* Botões de ação de uma escala — reusados na tabela (desktop) e nos
      cards enxutos (mobile). A delegação em #listaEscalas trata ambos. */
   const botoesAcaoHTML = (id) => `
@@ -1370,6 +1424,7 @@ import {
     on('agendaCancelar', 'click', () => $('dialogAgenda')?.close());
     on('footerPrivacidade', 'click', (ev) => { ev.preventDefault(); $('dialogPrivacidade')?.showModal(); });
     on('privacidadeFechar', 'click', () => $('dialogPrivacidade')?.close());
+    initFeedback();
     on('shareCsvOpt', 'click', () => { $('dialogShare')?.close(); exportarCSV(); });
     on('sharePdfOpt', 'click', () => { $('dialogShare')?.close(); imprimirRelatorio(); });
     on('shareClose',  'click', () => $('dialogShare')?.close());

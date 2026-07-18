@@ -213,6 +213,26 @@ const ROTEIRO = `(async () => {
   await espera(300);
   ok('Remoção limpa a lista', JSON.parse(localStorage.getItem('pmgoEscalas') || '[]').length === 0);
 
+  // 6. canal de feedback: dialog abre pelo rodapé, tipos alternam e o mailto
+  //    aponta para o mantenedor (validado sem navegar para fora da página)
+  document.getElementById('footerFeedback').click();
+  await espera(100);
+  const dlgFb = document.getElementById('dialogFeedback');
+  ok('Feedback: dialog abre pelo link do rodapé', !!dlgFb && dlgFb.open);
+  const tipoSugestao = document.querySelector('#fbTipos .fb-tipo[data-tipo="Sugestão"]');
+  tipoSugestao.click();
+  ok('Feedback: seleção de tipo alterna o ativo',
+     tipoSugestao.classList.contains('is-active') && tipoSugestao.getAttribute('aria-pressed') === 'true' &&
+     document.querySelectorAll('#fbTipos .fb-tipo.is-active').length === 1);
+  const urlFb = window.__ac4MailtoFeedback('Sugestão', 'Mensagem de teste');
+  ok('Feedback: mailto endereça o mantenedor com assunto e corpo',
+     urlFb.startsWith('mailto:welitonsp@gmail.com?subject=') &&
+     urlFb.includes(encodeURIComponent('[Calculadora AC4] Sugestão')) &&
+     urlFb.includes(encodeURIComponent('Mensagem de teste')),
+     urlFb.slice(0, 60));
+  document.getElementById('fbFechar').click();
+  ok('Feedback: dialog fecha sem enviar', !dlgFb.open);
+
   localStorage.removeItem('pmgoEscalas');
   return JSON.stringify(passos);
 })()`;

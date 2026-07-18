@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Calculadora AC4 — v56
+   Calculadora AC4 — v57
    ========================================================================== */
 
 /* Inter (variable, 100–900) self-hosted — sem dependência do Google Fonts,
@@ -1014,6 +1014,76 @@ textarea.control { min-height: 74px; resize: vertical; }
 /* ===== AVISO DE PRIVACIDADE ===== */
 .privacidade-texto { display: grid; gap: 10px; margin-bottom: 18px; }
 .privacidade-texto p { font-size: 0.88rem; line-height: 1.5; color: var(--text); }
+
+/* ===== FEEDBACK (canal de elogios e sugestões) ===== */
+.feedback-dialog { max-width: min(92vw, 440px); }
+.fb-tipos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0 18px; }
+.fb-tipo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 64px;
+  padding: 10px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+.fb-tipo .icon { width: 20px; height: 20px; }
+.fb-tipo.is-active {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+  color: #fff;
+  box-shadow: 0 8px 18px -12px var(--navy-900);
+}
+[data-theme="dark"] .fb-tipo.is-active {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--navy-950);
+}
+.fb-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.fb-textarea {
+  width: 100%;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+  line-height: 1.5;
+  resize: vertical;
+}
+.fb-textarea:focus-visible { outline: 2px solid var(--navy-900); outline-offset: 1px; }
+[data-theme="dark"] .fb-textarea:focus-visible { outline-color: var(--gold-500); }
+.fb-hint { font-size: 0.72rem; font-weight: 600; color: var(--text-faint); margin-top: 7px; }
+.fb-actions { margin-top: 18px; }
+.fb-actions .btn { min-height: 44px; }
+.fb-copy {
+  display: block;
+  margin: 14px auto 0;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.fb-copy:hover { color: var(--text); }
 
 /* ===== PRINT ===== */
 .print-only { display: none; }
